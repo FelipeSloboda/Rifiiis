@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Meu painel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;--gold:#8a6a1f;--gold-bg:#fdf6e3;
+  --pix:#0f7c86;
+  --radius:20px;--radius-sm:14px;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;
+  -webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:78px}
+:where(a,button,input,[tabindex]):focus-visible{outline:3px solid var(--amarelo);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+.topbar{background:var(--app-bg-dark);color:#fff;padding:12px 0;font-size:13px}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;letter-spacing:-.3px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.topbar .me{display:flex;align-items:center;gap:11px;font-size:12.5px;color:#cddaea}
+.topbar a{color:#cddaea;text-decoration:none}
+.topbar a:hover{color:#fff}
+
+main{max-width:880px;margin:0 auto;padding:24px 20px 40px}
+h1{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#fff}
+.sub{color:#c3d5f0;font-size:13.5px;margin-top:3px;margin-bottom:20px}
+
+/* abas — pílulas sobre o azul */
+.tabs{display:flex;gap:8px;margin-bottom:22px;overflow-x:auto;padding-bottom:5px}
+.tab{display:flex;align-items:center;padding:10px 16px;font-size:13.5px;font-weight:800;color:#fff;
+  background:none;border:2px solid rgba(255,255,255,.35);border-radius:99px;cursor:pointer;
+  font-family:inherit;white-space:nowrap;text-decoration:none}
+.tab:hover{border-color:#fff}
+.tab.on{background:var(--amarelo);color:var(--texto-card);border:2px solid var(--borda-dura);
+  box-shadow:0 3px 0 var(--borda-dura)}
+.tab .badge{background:var(--gold-bg);color:var(--gold);border:1.5px solid var(--gold);
+  font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:99px;margin-left:6px}
+
+/* card DOCUMENTO — branco, borda dura */
+.card{background:#fff;border:3px solid var(--borda-dura);border-radius:var(--radius);padding:20px;
+  margin-bottom:20px;box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5)}
+
+/* ===== GANHADOR: o estado que faltava ===== */
+.win{background:linear-gradient(160deg,var(--gold-bg),#fff);border:3px solid var(--borda-dura);
+  border-radius:var(--radius);padding:22px;margin-bottom:20px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5)}
+.win .hd{display:flex;align-items:flex-start;gap:13px;margin-bottom:14px}
+.win .hd .ic{font-size:30px;line-height:1;flex-shrink:0}
+.win h2{font-size:19px;font-weight:900;color:var(--gold);letter-spacing:-.3px;margin-bottom:3px}
+.win .hd p{font-size:13.5px;color:#6b5216}
+.win .num{font-family:var(--mono);font-size:34px;font-weight:600;color:var(--gold);
+  letter-spacing:-1px;margin:4px 0 14px}
+.win .acts{display:flex;gap:10px;flex-wrap:wrap}
+.btn{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;
+  padding:12px 20px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn.ghost{background:#fff;color:var(--brand)}
+.btn.gold{background:var(--gold)}
+.btn.gold:hover{background:#6f5518}
+.btn.sm{padding:9px 15px;font-size:12.5px}
+
+/* pedidos — cards DOCUMENTO brancos */
+.order{background:#fff;border:3px solid var(--borda-dura);border-radius:var(--radius);overflow:hidden;
+  margin-bottom:20px;box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5)}
+.order-head{padding:15px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  flex-wrap:wrap;border-bottom:2px solid var(--borda-dura);background:#fffaf4}
+.order-head .t{font-weight:800;font-size:15px}
+.order-head .m{font-size:12.5px;color:var(--muted);margin-top:2px}
+.order-body{padding:18px}
+.pill{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;white-space:nowrap;
+  border:1.5px solid currentColor}
+.pill.pago{background:var(--verify-bg);color:var(--verify)}
+.pill.aguard{background:var(--warn-bg);color:var(--warn)}
+.pill.exp{background:#efe4d6;color:var(--muted)}
+.pill.win{background:var(--gold-bg);color:var(--gold)}
+.pill.perdeu{background:#efe4d6;color:var(--muted)}
+
+.nums{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.num{font-family:var(--mono);font-size:12.5px;font-weight:500;background:#f6ece0;border:1.5px solid #e0cdb6;
+  border-radius:8px;padding:5px 9px;color:var(--ink-2)}
+.num.hit{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
+.more{font-size:12.5px;color:var(--brand);font-weight:600;background:none;border:0;cursor:pointer;
+  font-family:inherit;padding:5px 0;text-decoration:underline}
+
+/* prova criptográfica — verde reservado, intacto; só cantos arredondados */
+.proof{margin-top:16px;background:var(--verify-bg);border:2px solid #bce0cd;border-left:4px solid var(--verify);
+  border-radius:16px;padding:15px 16px}
+.proof .t{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--verify);font-size:14px;margin-bottom:7px}
+.proof p{font-size:12.5px;color:#1c5540;line-height:1.55;margin-bottom:11px}
+.proof .acts{display:flex;gap:9px;flex-wrap:wrap}
+.btn-sm{background:var(--verify);color:#fff;border:0;border-radius:99px;padding:9px 16px;font-size:12.5px;
+  font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-block}
+.btn-sm:hover{background:#0b5537}
+.btn-sm.ghost{background:transparent;color:var(--verify);border:1.5px solid #9dd1b6}
+.hashline{font-family:var(--mono);font-size:11px;color:#2f6b50;background:#daece2;border-radius:8px;
+  padding:8px 10px;margin-top:10px;word-break:break-all;line-height:1.5}
+
+.alert{border-radius:var(--radius-sm);padding:13px 15px;font-size:13px;display:flex;gap:10px;line-height:1.5}
+.alert.warn{background:var(--warn-bg);border:2px solid #eadcb8;color:#6d4d08}
+.alert.danger{background:var(--danger-bg);border:2px solid #f0cdcd;color:#7d1b22}
+.alert b{display:block;margin-bottom:2px}
+.alert a{color:inherit;font-weight:700}
+
+/* resumo — 4 cards brancos com borda dura */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border:3px solid var(--borda-dura);border-radius:16px;padding:14px 15px;
+  box-shadow:0 4px 0 var(--borda-dura)}
+.stat .l{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:21px;font-weight:900;letter-spacing:-.5px;margin-top:4px}
+
+/* LGPD */
+.dl{display:grid;grid-template-columns:auto 1fr;gap:11px 20px;font-size:13.5px;margin-bottom:4px}
+.dl dt{color:var(--muted)}
+.dl dd{font-weight:600;text-align:right}
+.danger-zone{border:2px solid #f0cdcd;background:var(--danger-bg);border-radius:var(--radius-sm);
+  padding:16px;margin-top:18px}
+.danger-zone .t{font-weight:700;color:var(--danger);font-size:13.5px;margin-bottom:6px}
+.danger-zone p{font-size:12.5px;color:#7d1b22;line-height:1.6;margin-bottom:12px}
+.btn.danger{background:var(--danger)}
+.btn.danger:hover{background:#8a1d24}
+.hide{display:none}
+.foot{text-align:center;font-size:12px;color:#b9cde8;padding:8px 20px 30px;line-height:1.7}
+.foot a{color:var(--amarelo)}
+
+/* barra de navegação inferior — padrão mobile do mockup */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--app-bg-dark);
+  display:flex;justify-content:space-around;padding:9px 4px 11px;z-index:50;
+  border-top:2px solid rgba(255,255,255,.12)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:700;color:#9db6dc;text-decoration:none;padding:3px 10px;min-width:64px}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--amarelo)}
+.tabbar a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <div class="me">
+      <span>Maria S.</span>
+      <a href="03a-acesso-comprador.html">sair</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h1>Meu painel</h1>
+  <p class="sub">Suas participações, comprovantes e dados.</p>
+
+  <nav class="tabs" aria-label="Seções do painel">
+    <a class="tab on" href="#" onclick="sel(0);return false">🎫 Minhas campanhas <span class="badge">1 PRÊMIO</span></a>
+    <a class="tab" href="#" onclick="sel(1);return false">🔐 Comprovantes</a>
+    <a class="tab" href="#" onclick="sel(2);return false">👤 Meus dados</a>
+  </nav>
+
+  <!-- ============ ABA 1: CAMPANHAS ============ -->
+  <div id="t0">
+    <div class="stats">
+      <div class="stat"><div class="l">Campanhas</div><div class="v">4</div></div>
+      <div class="stat"><div class="l">Números</div><div class="v">185</div></div>
+      <div class="stat"><div class="l">Investido</div><div class="v">R$ 92,50</div></div>
+      <div class="stat"><div class="l">Prêmios</div><div class="v" style="color:var(--gold)">1</div></div>
+    </div>
+
+    <!-- ESTADO DE GANHADOR -->
+    <section class="win">
+      <div class="hd">
+        <span class="ic" aria-hidden="true">🏆</span>
+        <div>
+          <h2>Você ganhou!</h2>
+          <p><b>Notebook Dell i7</b> · apurado em 20/08/2026</p>
+        </div>
+      </div>
+      <div class="num">043.119</div>
+      <div class="acts">
+        <a class="btn gold" href="#">✅ Confirmar que recebi o prêmio</a>
+        <a class="btn ghost" href="04-apuracao.html">Ver a apuração</a>
+      </div>
+      <p style="font-size:12.5px;color:#6b5216;margin-top:13px;line-height:1.55">
+        O organizador tem até <b>19/09/2026</b> para entregar. Confirme só depois de
+        receber — sua confirmação encerra a campanha e entra no registro público.
+      </p>
+    </section>
+
+    <!-- em andamento -->
+    <article class="order">
+      <div class="order-head">
+        <div>
+          <div class="t">Honda CB 500F 2026</div>
+          <div class="m">50 números · pago em 28/08/2026 · sorteio 12/09</div>
+        </div>
+        <span class="pill pago">✓ Confirmado</span>
+      </div>
+      <div class="order-body">
+        <div class="nums">
+          <span class="num">048221</span><span class="num">112907</span><span class="num">203445</span>
+          <span class="num">217800</span><span class="num">298113</span><span class="num">334902</span>
+          <span class="num">401277</span><span class="num">455630</span><span class="num">512088</span>
+        </div>
+        <button class="more" type="button">Ver os 41 números restantes</button>
+        <div class="proof">
+          <div class="t">🔐 Comprovante verificável</div>
+          <p>Seus números entram na lista selada antes do sorteio. Com este comprovante,
+             qualquer pessoa confirma que eles já estavam na base.</p>
+          <div class="acts">
+            <a class="btn-sm" href="05-verificador.html">Verificar agora</a>
+            <a class="btn-sm ghost" href="#">Baixar (.json)</a>
+          </div>
+          <div class="hashline">raiz: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- aguardando -->
+    <article class="order">
+      <div class="order-head">
+        <div>
+          <div class="t">iPhone 17 Pro Max</div>
+          <div class="m">10 números · criado às 15:58</div>
+        </div>
+        <span class="pill aguard">⏳ Aguardando Pix</span>
+      </div>
+      <div class="order-body">
+        <div class="alert warn">
+          <span aria-hidden="true">⏱️</span>
+          <span><b>Faltam 6 minutos para a reserva expirar</b>
+            Se o pagamento não cair, estes números voltam para o estoque.
+            <a href="02-checkout-pix.html">Pagar agora →</a></span>
+        </div>
+      </div>
+    </article>
+
+    <!-- apurada, não premiado -->
+    <article class="order">
+      <div class="order-head">
+        <div>
+          <div class="t">Fiat Mobi 2026</div>
+          <div class="m">100 números · apurado em 02/08/2026 · nº sorteado 771.204</div>
+        </div>
+        <span class="pill perdeu">Não premiado</span>
+      </div>
+      <div class="order-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          Desta vez não foi. Seus números estavam na lista selada — você pode conferir.</p>
+        <div class="acts" style="display:flex;gap:9px;flex-wrap:wrap">
+          <a class="btn sm ghost" href="04-apuracao.html">Ver a apuração</a>
+          <a class="btn sm ghost" href="05-verificador.html">Verificar meu comprovante</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- expirado -->
+    <article class="order">
+      <div class="order-head">
+        <div>
+          <div class="t">Kit Gamer Completo</div>
+          <div class="m">25 números · criado em 26/07/2026</div>
+        </div>
+        <span class="pill exp">Expirado</span>
+      </div>
+      <div class="order-body">
+        <div class="alert danger">
+          <span aria-hidden="true">ℹ️</span>
+          <span><b>O prazo do Pix venceu e os números voltaram para o estoque</b>
+            Nenhuma cobrança foi feita.</span>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- ============ ABA 2: COMPROVANTES ============ -->
+  <div id="t1" class="hide">
+    <section class="card">
+      <h2 style="font-size:15.5px;font-weight:800;margin-bottom:5px">🔐 Seus comprovantes</h2>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:16px">
+        Cada compra confirmada gera uma prova de que seus números estavam na lista
+        selada antes do sorteio. Guarde ou verifique quando quiser.</p>
+
+      <div style="display:grid;gap:12px">
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:2px solid var(--line);border-radius:var(--radius-sm);flex-wrap:wrap">
+          <div style="flex:1;min-width:170px">
+            <div style="font-weight:600;font-size:14px">Notebook Dell i7</div>
+            <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:2px">
+              raiz a3f1…9d20 · 25 números</div>
+          </div>
+          <span class="pill win">🏆 Premiado</span>
+          <a class="btn-sm" href="05-verificador.html">Verificar</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:2px solid var(--line);border-radius:var(--radius-sm);flex-wrap:wrap">
+          <div style="flex:1;min-width:170px">
+            <div style="font-weight:600;font-size:14px">Honda CB 500F 2026</div>
+            <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:2px">
+              raiz 7f83…9069 · 50 números</div>
+          </div>
+          <span class="pill pago">Aguardando sorteio</span>
+          <a class="btn-sm" href="05-verificador.html">Verificar</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#fff;border:2px solid var(--line);border-radius:var(--radius-sm);flex-wrap:wrap">
+          <div style="flex:1;min-width:170px">
+            <div style="font-weight:600;font-size:14px">Fiat Mobi 2026</div>
+            <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:2px">
+              raiz c204…1b8e · 100 números</div>
+          </div>
+          <span class="pill perdeu">Apurada</span>
+          <a class="btn-sm" href="05-verificador.html">Verificar</a>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6;padding-top:14px;border-top:1px solid var(--line)">
+        A verificação roda no seu próprio navegador, sem passar por nenhum servidor.
+        Você não precisa confiar em nós — <a href="05-verificador.html" style="color:var(--brand);font-weight:600">confira você mesmo</a>.
+      </p>
+    </section>
+  </div>
+
+  <!-- ============ ABA 3: MEUS DADOS (LGPD) ============ -->
+  <div id="t2" class="hide">
+    <section class="card">
+      <h2 style="font-size:15.5px;font-weight:800;margin-bottom:14px">👤 Seus dados</h2>
+      <dl class="dl">
+        <dt>Nome</dt><dd>Maria Silva Souza</dd>
+        <dt>CPF</dt><dd style="font-family:var(--mono)">•••.456.789-••</dd>
+        <dt>Nascimento</dt><dd>14/03/1992</dd>
+        <dt>Celular</dt><dd style="font-family:var(--mono)">(11) •••••-4321</dd>
+        <dt>E-mail</dt><dd>maria.souza@email.com</dd>
+      </dl>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px">
+        <a class="btn ghost sm" href="#">Corrigir meus dados</a>
+        <a class="btn ghost sm" href="#">Baixar tudo que vocês têm sobre mim</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="font-size:15.5px;font-weight:800;margin-bottom:5px">📋 Consentimentos</h2>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">
+        O que você autorizou, e quando.</p>
+      <dl class="dl">
+        <dt>Regulamento (versão 3)</dt><dd>aceito em 28/08/2026</dd>
+        <dt>Política de privacidade</dt><dd>aceita em 28/08/2026</dd>
+        <dt>Avisos por WhatsApp</dt><dd>não autorizado</dd>
+      </dl>
+
+      <div class="danger-zone">
+        <div class="t">Excluir meus dados pessoais</div>
+        <p>Seus dados pessoais ficam ilegíveis de forma permanente.
+          <b>O que não muda:</b> os números que você comprou continuam na lista pública
+          da campanha — sem seu nome — porque apagá-los invalidaria a prova de todos
+          os outros compradores.</p>
+        <a class="btn danger sm" href="#">Solicitar exclusão</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <a href="05-verificador.html">Verificador público</a> ·
+  <a href="01-campanha.html">Campanhas</a> · <a href="#">Privacidade (LGPD)</a><br>
+  Seu CPF nunca aparece em nenhuma lista pública.
+</footer>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <a href="08-home-app.html"><span class="ic" aria-hidden="true">🏠</span>Home</a>
+  <a href="03a-acesso-comprador.html"><span class="ic" aria-hidden="true">🎫</span>Meus Bilhetes</a>
+  <a class="on" href="03-meus-numeros.html"><span class="ic" aria-hidden="true">👤</span>Perfil</a>
+  <a href="#"><span class="ic" aria-hidden="true">❓</span>Suporte</a>
+</nav>
+
+<script>
+function sel(i){
+  document.querySelectorAll('.tab').forEach((t,n)=>t.classList.toggle('on',n===i));
+  [0,1,2].forEach(n=>document.getElementById('t'+n).classList.toggle('hide',n!==i));
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Acesso do operador</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --radius:14px;--radius-sm:10px;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:var(--app-bg);min-height:100vh}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+.shell{min-height:100vh;display:grid;place-items:center;padding:34px 20px}
+.box{width:100%;max-width:420px}
+.brand{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:900;font-size:22px;letter-spacing:-.4px;margin-bottom:6px;color:#fff}
+.brand .mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:17px;color:#fff}
+.tag{text-align:center;font-size:14px;font-weight:800;color:var(--amarelo);letter-spacing:-.2px;margin-bottom:24px;text-shadow:0 2px 0 rgba(0,0,0,.22)}
+
+.card{background:linear-gradient(165deg,var(--card-laranja),var(--card-laranja-2));
+  border:3px solid var(--borda-dura);border-radius:22px;padding:26px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5)}
+h1{font-size:21px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px;color:var(--texto-card)}
+.lead{font-size:13.5px;color:var(--texto-card);font-weight:500;margin-bottom:20px}
+
+.field{margin-bottom:15px}
+.field label{display:block;font-size:12.5px;font-weight:800;color:var(--texto-card);margin-bottom:6px}
+.field input{width:100%;border:2px solid var(--borda-dura);border-radius:99px;padding:13px 16px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+.field input:focus{border-color:var(--brand-2)}
+.field input::placeholder{color:#a9b3c0}
+.field.err input{border-color:var(--danger);background:#fffbfb}
+.err-msg{font-size:12.5px;color:var(--danger);background:var(--danger-bg);border:2px solid var(--danger);
+  border-radius:12px;padding:9px 12px;margin-top:8px;display:flex;gap:6px;align-items:flex-start;font-weight:600}
+
+.row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:20px;color:var(--texto-card)}
+.row a{color:var(--texto-card);font-weight:800;text-decoration:underline}
+.row a:hover{text-decoration:none}
+.remember{display:flex;align-items:center;gap:8px;color:var(--texto-card);font-weight:600;cursor:pointer}
+.remember input{width:17px;height:17px;accent-color:var(--brand);cursor:pointer}
+
+.btn{width:100%;background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:14px;
+  font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;
+  display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn.ghost{background:#fff;color:var(--texto-card);border:2.5px solid var(--borda-dura);margin-top:10px}
+
+/* passo 2: TOTP */
+.otp{display:flex;gap:9px;justify-content:center;margin:6px 0 4px}
+.otp input{width:48px;height:56px;text-align:center;font-size:22px;font-weight:800;font-family:var(--mono);
+  border:2.5px solid var(--borda-dura);border-radius:14px;background:#fff;padding:0}
+.otp input:focus{border-color:var(--brand-2)}
+.otp-help{font-size:12.5px;color:var(--texto-card);font-weight:500;text-align:center;margin:12px 0 18px;line-height:1.55}
+.otp-help b{color:var(--texto-card)}
+
+/* R0: 2FA é obrigatório, não opcional — verde reservado à prova/segurança */
+.mandatory{background:var(--verify-bg);border:1px solid #bce0cd;border-left:4px solid var(--verify);
+  border-radius:14px;padding:13px 15px;font-size:12.5px;color:#1c5540;line-height:1.55;margin-bottom:18px;display:flex;gap:9px}
+.mandatory b{display:block;margin-bottom:2px}
+
+/* aviso de tentativas */
+.attempts{background:var(--warn-bg);border:2px solid #eadcb8;border-radius:14px;
+  padding:12px 14px;font-size:12.5px;color:#6d4d08;line-height:1.55;margin-bottom:18px;display:flex;gap:9px}
+
+.divider{display:flex;align-items:center;gap:12px;margin:22px 0 16px;color:var(--texto-card);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(13,51,36,.35)}
+
+.foot{text-align:center;font-size:11.5px;color:#b9cde8;margin-top:20px;line-height:1.7}
+.foot a{color:var(--amarelo);font-weight:700}
+.audit{font-size:11.5px;color:var(--texto-card);font-weight:600;text-align:center;margin-top:16px;padding-top:14px;border-top:2px dashed rgba(15,47,99,.5);line-height:1.55}
+.audit b{color:var(--texto-card)}
+.state-nav{text-align:center;font-size:11.5px;color:#c3d5f0;margin-top:22px;line-height:1.8}
+.state-nav a{color:var(--amarelo);font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="box">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <p class="tag">Área do operador</p>
+
+    <!-- ============ PASSO 2: segundo fator ============ -->
+    <section class="card">
+      <h1>Confirme que é você</h1>
+      <p class="lead">Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
+
+      <div class="otp" role="group" aria-label="Código de verificação de 6 dígitos">
+        <input type="text" inputmode="numeric" maxlength="1" value="4" aria-label="Dígito 1">
+        <input type="text" inputmode="numeric" maxlength="1" value="8" aria-label="Dígito 2">
+        <input type="text" inputmode="numeric" maxlength="1" value="2" aria-label="Dígito 3">
+        <input type="text" inputmode="numeric" maxlength="1" value="0" aria-label="Dígito 4">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 5">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 6">
+      </div>
+      <p class="otp-help">O código muda a cada 30 segundos.<br>
+        Entrando como <b>operador@serraverde.com.br</b></p>
+
+      <a class="btn" href="06-painel-operador.html">Entrar</a>
+      <button class="btn ghost" type="button">Usar um código de recuperação</button>
+
+      <p class="audit">
+        🔒 Toda tentativa de acesso — com sucesso ou não — é registrada
+        na trilha de auditoria com horário e endereço de origem.
+      </p>
+    </section>
+
+    <p class="state-nav">
+      Estados desta tela no protótipo:<br>
+      <a href="#" onclick="document.querySelectorAll('.card').forEach((c,i)=>c.style.display=i===1?'block':'none');return false">1 · e-mail e senha</a> ·
+      <a href="#" onclick="document.querySelectorAll('.card').forEach((c,i)=>c.style.display=i===0?'block':'none');return false">2 · segundo fator</a> ·
+      <a href="#" onclick="document.querySelectorAll('.card').forEach((c,i)=>c.style.display=i===2?'block':'none');return false">3 · primeiro acesso (configurar 2FA)</a>
+    </p>
+
+    <!-- ============ PASSO 1: credenciais (oculto por padrão) ============ -->
+    <section class="card" style="display:none;margin-top:18px">
+      <h1>Entrar</h1>
+      <p class="lead">Acesse para gerenciar suas campanhas.</p>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" inputmode="email" autocomplete="username"
+               value="operador@serraverde.com.br">
+      </div>
+
+      <div class="field err">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="current-password" value="............"
+               aria-invalid="true" aria-describedby="senha-err">
+        <p class="err-msg" id="senha-err" role="alert">
+          <span aria-hidden="true">⚠️</span>
+          <span>E-mail ou senha incorretos.</span>
+        </p>
+      </div>
+
+      <div class="attempts">
+        <span aria-hidden="true">⚠️</span>
+        <span>Restam <b>2 tentativas</b> antes do bloqueio temporário desta conta por 15 minutos.</span>
+      </div>
+
+      <div class="row">
+        <label class="remember"><input type="checkbox"> Manter conectado</label>
+        <a href="#">Esqueci minha senha</a>
+      </div>
+
+      <button class="btn" type="button">Continuar</button>
+
+      <p class="audit">
+        🔒 O acesso exige segundo fator. Não é possível desativá-lo.
+      </p>
+    </section>
+
+    <!-- ============ PASSO 3: primeiro acesso ============ -->
+    <section class="card" style="display:none;margin-top:18px">
+      <h1>Configure o segundo fator</h1>
+      <p class="lead">Antes de continuar, proteja sua conta.</p>
+
+      <div class="mandatory">
+        <span aria-hidden="true">🛡️</span>
+        <span><b>Esta etapa é obrigatória.</b>
+          Sua conta controla campanhas e dinheiro de compradores.
+          Não há como pular nem desativar depois.</span>
+      </div>
+
+      <div style="display:grid;place-items:center;margin-bottom:16px">
+        <div style="width:158px;height:158px;background:#fff;border:2.5px solid var(--borda-dura);
+                    border-radius:12px;display:grid;place-items:center">
+          <div style="width:126px;height:126px;border-radius:4px;opacity:.82;
+            background:repeating-linear-gradient(90deg,var(--ink) 0 6px,#fff 6px 12px),
+                       repeating-linear-gradient(0deg,var(--ink) 0 6px,#fff 6px 12px);
+            background-blend-mode:difference" role="img"
+            aria-label="QR Code para configurar o aplicativo autenticador"></div>
+        </div>
+      </div>
+
+      <p class="otp-help">
+        Escaneie com Google Authenticator, Authy ou 1Password.<br>
+        Não consegue escanear? <a href="#" style="color:var(--texto-card);font-weight:800">Use o código manual</a>
+      </p>
+
+      <div class="field">
+        <label for="conf">Digite o código gerado para confirmar</label>
+        <input id="conf" type="text" inputmode="numeric" maxlength="6" placeholder="000000"
+               style="font-family:var(--mono);font-size:19px;letter-spacing:5px;text-align:center;border-radius:14px">
+      </div>
+
+      <button class="btn" type="button">Ativar e continuar</button>
+
+      <p class="audit">
+        Guarde os <b>códigos de recuperação</b> que aparecem na próxima tela.
+        Eles são a única forma de entrar se você perder o celular —
+        e a recuperação nunca desliga o segundo fator.
+      </p>
+    </section>
+
+    <p class="foot">
+      Rifiiis · Plataforma de rifa com apuração verificável<br>
+      <a href="01-campanha.html">Ir para a área pública</a>
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

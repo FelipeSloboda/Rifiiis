@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Apurações (operador)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --radius:20px;--radius-sm:14px;
+  --sombra-dura:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5);
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+.app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+@media(max-width:860px){.app{grid-template-columns:1fr}.side{display:none}}
+.side{background:var(--app-bg-dark);color:#cddaea;padding:20px 14px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh}
+.side .brand{color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;gap:9px;margin-bottom:22px;padding:0 5px;letter-spacing:-.3px}
+.side .brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:99px;font-size:13.5px;color:#9db6dc;text-decoration:none;transition:.15s}
+.nav:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav.on{background:rgba(232,89,12,.3);color:#fff;font-weight:700}
+.side .sp{flex:1}
+.side .me{border-top:1px solid rgba(255,255,255,.12);padding-top:14px;margin-top:8px;font-size:12.5px;display:flex;align-items:center;gap:9px}
+.side .me .av{width:31px;height:31px;border-radius:50%;background:var(--brand-2);border:2px solid rgba(255,255,255,.35);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.side .me .sub{color:#9db6dc;font-size:11px;display:block;margin-top:1px}
+
+.main{padding:26px 30px 50px;overflow:auto}
+@media(max-width:860px){.main{padding:20px}}
+h1{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#fff}
+.sub{color:var(--amarelo);font-size:13.5px;font-weight:700;margin-top:3px;margin-bottom:22px;text-shadow:0 1px 0 rgba(0,0,0,.22)}
+
+.card{background:var(--card);border:3px solid var(--borda-dura);border-radius:var(--radius);padding:20px;margin-bottom:22px;box-shadow:var(--sombra-dura)}
+.card h2{font-size:15.5px;font-weight:800;letter-spacing:-.2px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.card .h2sub{font-size:12.5px;color:var(--muted);margin-bottom:15px}
+
+.btn{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:11px 20px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn.ghost{background:#fff;color:var(--brand);border:2.5px solid var(--borda-dura)}
+.btn.ghost:hover{background:#f2ede4}
+.btn.danger{background:var(--danger)}
+.btn.danger:hover{background:#8a1d24}
+.btn.sm{padding:8px 15px;font-size:12.5px;box-shadow:0 3px 0 var(--borda-dura)}
+
+/* ---- estado crítico: apuração pendente ---- */
+.crit{border:2.5px solid var(--danger);background:var(--danger-bg);border-radius:var(--radius);padding:20px 22px;margin-bottom:22px}
+.crit .hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.crit .hd .ic{font-size:22px;line-height:1;flex-shrink:0}
+.crit h2{font-size:16.5px;font-weight:800;color:var(--danger);margin-bottom:4px}
+.crit .hd p{font-size:13.5px;color:#7d1b22;line-height:1.55}
+.crit .why{background:rgba(255,255,255,.75);border-radius:var(--radius-sm);padding:13px 15px;font-size:13px;color:#7d1b22;margin-bottom:15px}
+.crit .why b{display:block;margin-bottom:5px}
+.crit .why ul{margin:6px 0 0 17px;line-height:1.7}
+.crit .acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.crit .hint{font-size:12px;color:#8b3f45;margin-top:13px;line-height:1.5}
+
+/* nunca resultado sintético — bloco escuro preservado */
+.never{display:flex;gap:9px;background:var(--ink);color:#dfe7e5;border-radius:var(--radius-sm);padding:13px 16px;font-size:12.5px;margin-top:16px;line-height:1.55}
+.never b{color:#fff}
+
+/* ---- tentativas da fonte ---- */
+.try{display:flex;align-items:center;gap:11px;font-size:13px;padding:10px 0;border-bottom:1px solid #f4e9dc}
+.try:last-child{border-bottom:0}
+.try .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.try .dot.fail{background:var(--danger)}
+.try .dot.wait{background:var(--warn)}
+.try .dot.ok{background:var(--verify)}
+.try .when{margin-left:auto;color:var(--muted);font-size:12.5px;font-family:var(--mono);flex-shrink:0}
+
+/* ---- entrada manual assistida ---- */
+.manual{border:2.5px dashed #d8cfa8;background:#fffdf6;border-radius:var(--radius);padding:20px 22px;margin-bottom:22px}
+.manual h2{color:var(--warn)}
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+@media(max-width:760px){.fields{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.fields{grid-template-columns:1fr}}
+.f label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+.f input{width:100%;border:2px solid var(--borda-dura);border-radius:99px;padding:11px 16px;font-size:15px;font-family:var(--mono);background:#fff;color:var(--ink)}
+.f input:focus{border-color:var(--brand-2)}
+.f .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+/* dupla conferência */
+.dual{background:#fff;border:2px solid var(--borda-dura);border-radius:var(--radius-sm);padding:15px;margin-top:6px}
+.dual .t{font-size:13px;font-weight:800;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-bottom:9px}
+.check:last-of-type{margin-bottom:0}
+.check input{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--brand);cursor:pointer}
+.who{font-size:12px;color:var(--muted);margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);display:flex;gap:7px;align-items:center}
+
+/* ---- lista de campanhas ---- */
+.row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f4e9dc;flex-wrap:wrap}
+.row:last-child{border-bottom:0}
+.row .info{flex:1;min-width:180px}
+.row .t{font-weight:700;font-size:14px}
+.row .m{font-size:12.5px;color:var(--muted);margin-top:2px}
+.pill{font-size:11px;font-weight:800;padding:5px 12px;border-radius:99px;white-space:nowrap;border:1.5px solid transparent}
+.pill.ok{background:var(--verify-bg);color:var(--verify);border-color:var(--verify)}
+.pill.pend{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.pill.wait{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.pill.retif{background:#eae6f5;color:#5b4a8a;border-color:#5b4a8a}
+.pill.none{background:#efe4d6;color:var(--muted);border-color:#b9ab95}
+
+/* ---- retificação ---- */
+.retif-box{border:2.5px solid #b7a8d8;background:#f8f6fc;border-radius:var(--radius);padding:20px 22px}
+.retif-box h2{color:#5b4a8a}
+.limits{background:#fff;border-radius:var(--radius-sm);padding:14px 16px;margin-top:14px;font-size:12.5px;line-height:1.75}
+.limits b{display:block;margin-bottom:7px;color:var(--ink)}
+.limits li{list-style:none;color:var(--ink-2)}
+select{width:100%;border:2px solid var(--borda-dura);border-radius:99px;padding:11px 16px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{width:100%;border:2px solid var(--borda-dura);border-radius:var(--radius-sm);padding:11px 14px;font-size:14px;font-family:inherit;min-height:76px;resize:vertical;background:#fff;color:var(--ink)}
+.note{font-size:12px;color:var(--muted);margin-top:13px;line-height:1.55;padding-top:12px;border-top:1px solid #d6cfe8}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a class="nav" href="06-painel-operador.html">📊 Painel</a>
+    <a class="nav" href="#">🎯 Campanhas</a>
+    <a class="nav" href="#">🧾 Pedidos</a>
+    <a class="nav on" href="07-apuracoes-admin.html">🔐 Apurações</a>
+    <a class="nav" href="#">📄 Relatórios</a>
+    <div class="sp"></div>
+    <div class="me">
+      <span class="av">SV</span>
+      <span>Serra Verde<span class="sub">2FA ativo</span></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1>Apurações</h1>
+    <p class="sub">Estado de cada campanha e as ações disponíveis quando algo trava.</p>
+
+    <!-- ============ ESTADO CRÍTICO: fonte indisponível ============ -->
+    <section class="crit">
+      <div class="hd">
+        <span class="ic" aria-hidden="true">🚨</span>
+        <div>
+          <h2>Apuração pendente — fonte oficial indisponível</h2>
+          <p><b>Honda CB 500F 2026</b> · extração de 12/09/2026 · aguardando há 42 minutos</p>
+        </div>
+      </div>
+
+      <div class="why">
+        <b>O que aconteceu</b>
+        As duas fontes configuradas para obter a extração da Loteria Federal falharam:
+        <ul>
+          <li>Fonte primária (CAIXA) — sem resposta após 3 tentativas</li>
+          <li>Fonte secundária — retornou dados de concurso diferente</li>
+        </ul>
+      </div>
+
+      <div class="acts">
+        <button class="btn" type="button">🔄 Tentar novamente agora</button>
+        <button class="btn ghost" type="button">✍️ Entrada manual assistida</button>
+      </div>
+      <p class="hint">A próxima tentativa automática acontece em 8 minutos.
+        A campanha permanece congelada e nenhum número foi alterado.</p>
+
+      <div class="never">
+        <span aria-hidden="true">🔒</span>
+        <span><b>O sistema não inventa resultado.</b> Enquanto a extração oficial não for
+          obtida ou informada manualmente com dupla conferência, a apuração fica pendente —
+          por mais tempo que leve. Não existe caminho que produza um número sem origem oficial.</span>
+      </div>
+    </section>
+
+    <!-- tentativas -->
+    <section class="card">
+      <h2>📡 Tentativas de obtenção da extração</h2>
+      <p class="h2sub">Registro completo, gravado em auditoria.</p>
+      <div class="try"><span class="dot fail"></span>
+        <span>Fonte secundária — concurso divergente (5.981, esperado 5.982)</span>
+        <span class="when">20:31</span></div>
+      <div class="try"><span class="dot fail"></span>
+        <span>Fonte primária CAIXA — timeout após 30s</span>
+        <span class="when">20:24</span></div>
+      <div class="try"><span class="dot fail"></span>
+        <span>Fonte primária CAIXA — timeout após 30s</span>
+        <span class="when">20:12</span></div>
+      <div class="try"><span class="dot fail"></span>
+        <span>Fonte primária CAIXA — HTTP 503</span>
+        <span class="when">20:05</span></div>
+      <div class="try"><span class="dot wait"></span>
+        <span>Próxima tentativa automática</span>
+        <span class="when">21:05</span></div>
+    </section>
+
+    <!-- ============ ENTRADA MANUAL ASSISTIDA ============ -->
+    <section class="manual">
+      <h2>✍️ Entrada manual assistida</h2>
+      <p class="h2sub">Disponível apenas porque as duas fontes automáticas falharam.
+        Exige dupla conferência e fica registrada em auditoria com os dois responsáveis.</p>
+
+      <div class="fields">
+        <div class="f">
+          <label for="conc">Concurso</label>
+          <input id="conc" type="text" inputmode="numeric" value="5982">
+          <p class="hint">Deve bater com o configurado</p>
+        </div>
+        <div class="f">
+          <label for="dt">Data da extração</label>
+          <input id="dt" type="text" inputmode="numeric" value="12/09/2026">
+          <p class="hint">Trava na data da campanha</p>
+        </div>
+        <div class="f">
+          <label for="p1">1º prêmio</label>
+          <input id="p1" type="text" inputmode="numeric" placeholder="000000">
+          <p class="hint">6 dígitos</p>
+        </div>
+        <div class="f">
+          <label for="p2">2º prêmio</label>
+          <input id="p2" type="text" inputmode="numeric" placeholder="000000">
+        </div>
+        <div class="f">
+          <label for="p3">3º prêmio</label>
+          <input id="p3" type="text" inputmode="numeric" placeholder="000000">
+        </div>
+        <div class="f">
+          <label for="fonte">Comprovante da fonte oficial</label>
+          <input id="fonte" type="text" placeholder="URL ou anexo">
+          <p class="hint">Publicação oficial da CAIXA</p>
+        </div>
+      </div>
+
+      <div class="dual">
+        <div class="t">👥 Dupla conferência obrigatória</div>
+        <label class="check">
+          <input type="checkbox">
+          <span>Conferi os números acima contra a publicação oficial da Loteria Federal,
+            no site da CAIXA, e eles conferem dígito a dígito.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox">
+          <span>Entendo que esta entrada é irreversível e será registrada em meu nome
+            na trilha de auditoria pública da campanha.</span>
+        </label>
+        <div class="who">
+          <span aria-hidden="true">👤</span>
+          <span>Primeiro responsável: <b>Serra Verde (você)</b> ·
+            Segundo responsável: <b>aguardando</b> — a apuração só roda com as duas confirmações</span>
+        </div>
+      </div>
+
+      <div class="acts" style="margin-top:16px">
+        <button class="btn" type="button" style="background:#c2cbc9;pointer-events:none">
+          Registrar e apurar (aguardando 2ª confirmação)
+        </button>
+        <button class="btn ghost" type="button">Cancelar</button>
+      </div>
+    </section>
+
+    <!-- ============ TODAS AS CAMPANHAS ============ -->
+    <section class="card">
+      <h2>🗂️ Todas as campanhas</h2>
+      <p class="h2sub">Estado da apuração de cada uma.</p>
+
+      <div class="row">
+        <div class="info">
+          <div class="t">Honda CB 500F 2026</div>
+          <div class="m">Extração 12/09/2026 · 680.000 números vendidos</div>
+        </div>
+        <span class="pill pend">Pendente</span>
+        <button class="btn sm ghost" type="button">Resolver</button>
+      </div>
+
+      <div class="row">
+        <div class="info">
+          <div class="t">iPhone 17 Pro Max</div>
+          <div class="m">Apurada em 15/08/2026 · nº 048.221 · entregue e confirmado</div>
+        </div>
+        <span class="pill ok">Encerrada</span>
+        <a class="btn sm ghost" href="04-apuracao.html">Ver resultado</a>
+      </div>
+
+      <div class="row">
+        <div class="info">
+          <div class="t">Fiat Mobi 2026</div>
+          <div class="m">Apurada em 02/08/2026 · nº 771.204 · aguardando entrega há 28 dias</div>
+        </div>
+        <span class="pill wait">Entrega pendente</span>
+        <button class="btn sm" type="button">Registrar entrega</button>
+      </div>
+
+      <div class="row">
+        <div class="info">
+          <div class="t">Kit Gamer Completo</div>
+          <div class="m">Retificada em 20/07/2026 · concurso divergente corrigido</div>
+        </div>
+        <span class="pill retif">Retificada</span>
+        <button class="btn sm ghost" type="button">Ver histórico</button>
+      </div>
+
+      <div class="row">
+        <div class="info">
+          <div class="t">Notebook Dell i7</div>
+          <div class="m">Congelada em 30/06/2026 · nenhum número vendido</div>
+        </div>
+        <span class="pill none">Sem vendas</span>
+        <button class="btn sm ghost" type="button">Ver commitment</button>
+      </div>
+    </section>
+
+    <!-- ============ RETIFICAÇÃO ============ -->
+    <section class="retif-box">
+      <h2>⚖️ Retificar apuração</h2>
+      <p class="h2sub">Último recurso. A apuração anterior <b>não</b> é apagada —
+        ela permanece pública, marcada como retificada, ao lado da nova.</p>
+
+      <div style="display:grid;gap:14px;margin-top:16px">
+        <div class="f">
+          <label for="causa">Causa da retificação</label>
+          <select id="causa">
+            <option>Selecione a causa…</option>
+            <option>Extração de data/concurso divergente do configurado</option>
+            <option>Extração oficial anulada ou corrigida pela CAIXA</option>
+            <option>Regra de formação divergente do regulamento vigente</option>
+            <option>Corrupção de dados detectada (número em dois pedidos)</option>
+          </select>
+          <p class="hint" style="font-size:11.5px;color:var(--muted);margin-top:5px">
+            Lista fechada. Não há opção "outro" — retificação fora destas causas não é permitida.</p>
+        </div>
+        <div class="f">
+          <label for="just">Justificativa e evidência</label>
+          <textarea id="just" placeholder="Descreva o ocorrido e anexe a publicação oficial que comprova a causa."></textarea>
+        </div>
+      </div>
+
+      <div class="limits">
+        <b>O que a retificação nunca faz</b>
+        <li>❌ Alterar o snapshot ou o commitment — a base vendida é imutável e já está carimbada</li>
+        <li>❌ Rodar com extração diferente da oficial da data configurada</li>
+        <li>❌ Ser executada sem dupla autorização registrada</li>
+        <li>❌ Apagar, editar ou despublicar a apuração anterior</li>
+        <li>❌ Ocorrer após a entrega do prêmio confirmada</li>
+      </div>
+
+      <div class="acts" style="margin-top:16px">
+        <button class="btn danger" type="button">Solicitar retificação</button>
+        <span style="font-size:12px;color:var(--muted)">Requer confirmação de um segundo responsável</span>
+      </div>
+
+      <p class="note">A retificação só reinterpreta a <b>regra</b> sobre a <b>mesma</b> base
+        selada. Se a dúvida é sobre a base, e não sobre a regra, retificar não resolve —
+        e o commitment carimbado é justamente a prova de que a base não mudou.</p>
+    </section>
+  </main>
+</div>
+
+</body>
+</html>

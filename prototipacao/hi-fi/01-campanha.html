@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Página da campanha</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* tokens inline para o arquivo ser autocontido (ver _tokens.css) */
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;--warn:#8a5f00;--warn-bg:#fdf3dc;
+  --danger:#a3232b;--danger-bg:#fbeaea;--gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --bar:#f3e7d3;--bar-fill:#e8590c;
+  --radius:20px;--radius-sm:14px;
+  --shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5);
+  --shadow-sm:0 2px 8px -4px rgba(16,24,32,.3);
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;
+  -webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:78px}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--amarelo);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- topo ---------- */
+.topbar{background:var(--app-bg-dark);color:#fff;padding:11px 0;font-size:13px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;letter-spacing:-.3px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.topbar a{color:#c3d5f0;text-decoration:none;font-weight:600}
+.topbar a:hover{color:#fff;text-decoration:underline}
+
+/* aviso 18+ — R8, obrigatório em toda página pública */
+.age-strip{background:var(--app-bg-dark);color:var(--amarelo);border-bottom:1px solid rgba(255,255,255,.12);
+  font-size:12.5px;font-weight:800;padding:7px 0;text-align:center;letter-spacing:.2px}
+
+/* ---------- layout ---------- */
+.grid{max-width:1040px;margin:0 auto;padding:26px 20px 60px;display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr;padding-bottom:220px}}
+
+/* ---------- hero — card DOCUMENTO ---------- */
+.hero{background:var(--card);border:3px solid var(--borda-dura);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.hero .img{aspect-ratio:16/9;background:linear-gradient(135deg,#e4ecf5,#c6d8ea);display:grid;place-items:center;color:#5a6b80;font-size:13px;position:relative;border-bottom:3px solid var(--borda-dura)}
+.hero .img .ph{text-align:center}
+.hero .img .ph .ic{font-size:38px;display:block;margin-bottom:6px;opacity:.5}
+.badge-auth{position:absolute;top:12px;left:12px;background:rgba(16,24,32,.86);color:#fff;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:99px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)}
+.hero .body{padding:22px}
+h1{font-size:25px;font-weight:900;letter-spacing:-.5px;line-height:1.25}
+.sub{color:var(--muted);font-size:14px;margin-top:7px;font-weight:500}
+
+/* selo de verificação — a diferença do produto; verde reservado à prova */
+.verify-card{margin-top:18px;background:var(--verify-bg);border:1.5px solid #bce0cd;border-left:4px solid var(--verify);border-radius:15px;padding:14px 16px}
+.verify-card .t{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--verify);font-size:14px}
+.verify-card p{font-size:13px;color:#1c5540;margin-top:5px}
+.verify-card a{color:var(--verify);font-weight:700}
+
+/* progresso — trilho claro, preenchimento laranja */
+.progress-box{margin-top:20px}
+.progress-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:7px}
+.progress-head b{font-size:15px;font-weight:900}
+.bar{height:14px;background:var(--bar);border:2px solid var(--borda-dura);border-radius:99px;overflow:hidden}
+.bar>span{display:block;height:100%;width:68%;background:linear-gradient(90deg,var(--acao),#f5a623);border-radius:99px}
+.progress-foot{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:6px}
+
+/* blocos de conteúdo — cards DOCUMENTO */
+.block{background:var(--card);border:3px solid var(--borda-dura);border-radius:var(--radius);padding:20px;margin-top:20px;box-shadow:var(--shadow)}
+.block h2{font-size:16px;font-weight:900;letter-spacing:-.2px;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.block p{font-size:14px;color:var(--ink-2);margin-bottom:9px}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font-size:13.5px;margin-top:4px}
+.dl dt{color:var(--muted)}
+.dl dd{font-weight:700;text-align:right}
+
+/* ---------- coluna de compra — card AÇÃO laranja ---------- */
+.buy{position:sticky;top:18px;background:linear-gradient(165deg,var(--card-laranja),var(--card-laranja-2));
+  border:3px solid var(--borda-dura);border-radius:22px;padding:20px;box-shadow:var(--shadow);color:var(--texto-card)}
+@media(max-width:900px){.buy{position:static}}
+.price{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.price .v{font-size:30px;font-weight:900;letter-spacing:-1px;color:var(--texto-card)}
+.price .u{font-size:13.5px;color:var(--texto-card);font-weight:600}
+.price-note{font-size:12.5px;color:var(--texto-card);font-weight:500;margin-bottom:16px}
+
+.label{font-size:12.5px;font-weight:800;color:var(--texto-card);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+
+/* pacotes — pílulas brancas com borda dura */
+.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;margin-top:9px}
+.pack{border:2.5px solid var(--borda-dura);background:#fff;border-radius:99px;padding:10px 6px;text-align:center;cursor:pointer;font-family:inherit;transition:background .15s,transform .14s;position:relative;color:var(--texto-card)}
+.pack:hover{background:#fff6e8;transform:translateY(-1px)}
+.pack.on{background:var(--amarelo);box-shadow:0 3px 0 var(--borda-dura)}
+.pack .q{font-size:17px;font-weight:900;display:block;color:var(--texto-card)}
+.pack .p{font-size:11.5px;color:var(--texto-card);font-weight:600;margin-top:1px}
+.pack .tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--app-bg-dark);color:#fff;font-size:9.5px;font-weight:800;padding:2.5px 8px;border-radius:99px;white-space:nowrap}
+
+/* stepper acessível — pílula com borda dura */
+.stepper{display:flex;align-items:center;gap:0;border:2.5px solid var(--borda-dura);border-radius:99px;overflow:hidden;margin-bottom:16px;background:#fff}
+.stepper button{width:46px;height:46px;border:0;background:#fdf0dc;font-size:20px;cursor:pointer;color:var(--texto-card);font-family:inherit;font-weight:800;flex-shrink:0}
+.stepper button:hover{background:#f8e3c4}
+.stepper input{flex:1;border:0;text-align:center;font-size:17px;font-weight:800;font-family:inherit;min-width:0;background:#fff;color:var(--ink)}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none}
+
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:13px 0;border-top:2px solid var(--borda-dura);margin-bottom:14px}
+.total .l{font-size:14px;color:var(--texto-card);font-weight:700}
+.total .v{font-size:23px;font-weight:900;letter-spacing:-.5px;color:var(--texto-card)}
+
+/* CTA — pílula laranja de ação */
+.cta{width:100%;background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:15px;font-size:15.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s;box-shadow:0 4px 0 var(--borda-dura)}
+.cta:hover{background:var(--acao-hover)}
+.cta .pix-ic{width:17px;height:17px;background:#fff;border-radius:3px;display:grid;place-items:center;color:var(--pix);font-size:11px;font-weight:800}
+.cta-note{font-size:12px;color:var(--texto-card);font-weight:600;text-align:center;margin-top:10px;line-height:1.45}
+
+/* limite por CPF — R8 */
+.limit-note{margin-top:12px;background:#fff6e8;border:2px solid var(--borda-dura);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--ink-2);display:flex;gap:8px}
+
+/* barra fixa mobile — mesmo estilo de card com borda dura (fica acima da tabbar) */
+.mobile-bar{display:none}
+@media(max-width:900px){
+  .mobile-bar{display:flex;position:fixed;bottom:64px;left:0;right:0;background:var(--card);border-top:3px solid var(--borda-dura);padding:11px 16px;gap:12px;align-items:center;box-shadow:0 -6px 22px -12px rgba(0,0,0,.3);z-index:40}
+  .mobile-bar .info{flex:1;min-width:0}
+  .mobile-bar .info .l{font-size:11px;color:var(--muted)}
+  .mobile-bar .info .v{font-size:18px;font-weight:900}
+  .mobile-bar .cta{width:auto;padding:13px 22px;flex-shrink:0}
+}
+.foot{text-align:center;font-size:12px;color:#b9cde8;padding:26px 20px 34px;line-height:1.7}
+.foot a{color:var(--amarelo);font-weight:700}
+
+/* barra de navegação inferior — padrão mobile do mockup */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--app-bg-dark);
+  display:flex;justify-content:space-around;padding:9px 4px 11px;z-index:50;
+  border-top:2px solid rgba(255,255,255,.12)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:700;color:#9db6dc;text-decoration:none;padding:3px 10px;min-width:64px}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--amarelo)}
+.tabbar a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<div class="age-strip">🔞 Proibido para menores de 18 anos · Jogue com responsabilidade</div>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <nav><a href="03a-acesso-comprador.html">Consultar meus números</a></nav>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- ================= coluna principal ================= -->
+  <div>
+    <article class="hero">
+      <div class="img">
+        <span class="badge-auth">🛡️ Autorização SEAE nº 04.021/2026</span>
+        <div class="ph"><span class="ic">🏍️</span>[imagem do prêmio]</div>
+      </div>
+      <div class="body">
+        <h1>Moto 0 km — Honda CB 500F 2026</h1>
+        <p class="sub">Sorteio pela Loteria Federal · Extração de 12/09/2026</p>
+
+        <!-- diferencial do produto: prova, não promessa -->
+        <div class="verify-card">
+          <div class="t">✅ Apuração verificável</div>
+          <p>Antes do sorteio, a lista de números vendidos é selada com carimbo do tempo.
+             Depois, qualquer pessoa pode conferir que nada mudou.
+             <a href="05-verificador.html">Entenda como funciona →</a></p>
+        </div>
+
+        <div class="progress-box">
+          <div class="progress-head">
+            <span><b>68%</b> vendido</span>
+            <span>680.000 de 1.000.000</span>
+          </div>
+          <div class="bar"><span role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100" aria-label="68 por cento dos números vendidos"></span></div>
+          <div class="progress-foot">
+            <span>320.000 números disponíveis</span>
+            <span>Encerra em 12/09, 16h00</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <section class="block">
+      <h2>🎁 Sobre o prêmio</h2>
+      <p>Honda CB 500F 2026, 0 km, na cor preta, com documentação e emplacamento inclusos.
+         Entrega em até 30 dias após a apuração, mediante conferência de documentos.</p>
+      <dl class="dl">
+        <dt>Valor do prêmio</dt><dd>R$ 42.900,00</dd>
+        <dt>Entrega</dt><dd>Até 30 dias após a apuração</dd>
+        <dt>Frete</dt><dd>Por conta do organizador</dd>
+      </dl>
+    </section>
+
+    <section class="block">
+      <h2>🎲 Como o ganhador é definido</h2>
+      <p>O número é formado pelos <b>3 últimos dígitos do 1º prêmio</b> da extração da Loteria Federal
+         do dia 12/09/2026. Se o número apurado não tiver sido vendido, sobe-se para o próximo
+         número vendido imediatamente superior, e cada passo dessa regra fica registrado publicamente.</p>
+      <dl class="dl">
+        <dt>Fonte do sorteio</dt><dd>Loteria Federal (CAIXA)</dd>
+        <dt>Regra</dt><dd>3 últimos dígitos · 1º prêmio</dd>
+        <dt>Aproximação</dt><dd>Próximo vendido superior</dd>
+      </dl>
+    </section>
+
+    <section class="block">
+      <h2>📄 Regulamento e organizador</h2>
+      <p>Organizador: <b>Promoções Serra Verde LTDA</b> · CNPJ 12.345.678/0001-90</p>
+      <p>Autorização SEAE nº 04.021/2026, válida até 31/12/2026.</p>
+      <p><a href="#" style="color:var(--brand);font-weight:600">Ler o regulamento completo (versão 3) →</a></p>
+    </section>
+  </div>
+
+  <!-- ================= coluna de compra ================= -->
+  <aside class="buy">
+    <div class="price">
+      <span class="v">R$ 0,50</span>
+      <span class="u">por número</span>
+    </div>
+    <p class="price-note">Cada bilhete dá direito a 1 número da sorte.</p>
+
+    <span class="label" id="lbl-pack">Escolha um pacote</span>
+    <div class="packs" role="group" aria-labelledby="lbl-pack">
+      <button class="pack" type="button"><span class="q">10</span><span class="p">R$ 5,00</span></button>
+      <button class="pack on" type="button" aria-pressed="true"><span class="tag">MAIS ESCOLHIDO</span><span class="q">50</span><span class="p">R$ 25,00</span></button>
+      <button class="pack" type="button"><span class="q">100</span><span class="p">R$ 50,00</span></button>
+      <button class="pack" type="button"><span class="q">250</span><span class="p">R$ 125,00</span></button>
+      <button class="pack" type="button"><span class="q">500</span><span class="p">R$ 250,00</span></button>
+      <button class="pack" type="button"><span class="q">1000</span><span class="p">R$ 500,00</span></button>
+    </div>
+
+    <label class="label" for="qtd">Ou digite a quantidade</label>
+    <div class="stepper">
+      <button type="button" aria-label="Diminuir quantidade">−</button>
+      <input id="qtd" type="number" value="50" min="1" inputmode="numeric" aria-label="Quantidade de números">
+      <button type="button" aria-label="Aumentar quantidade">+</button>
+    </div>
+
+    <div class="total">
+      <span class="l">Total</span>
+      <span class="v">R$ 25,00</span>
+    </div>
+
+    <a class="cta" href="02a-cadastro.html">
+      <span class="pix-ic">P</span> Pagar com Pix
+    </a>
+    <p class="cta-note">Seus números são reservados por 15 minutos<br>e liberados na hora em que o Pix cair.</p>
+
+    <div class="limit-note">
+      <span>ℹ️</span>
+      <span>Limite de <b>R$ 2.000,00</b> por CPF nesta campanha.</span>
+    </div>
+  </aside>
+</main>
+
+<!-- barra fixa no mobile: o CTA nunca sai da tela -->
+<div class="mobile-bar">
+  <div class="info">
+    <div class="l">50 números</div>
+    <div class="v">R$ 25,00</div>
+  </div>
+  <a class="cta" href="02a-cadastro.html"><span class="pix-ic">P</span> Pagar com Pix</a>
+</div>
+
+<footer class="foot">
+  Rifiiis · Plataforma de rifa com apuração verificável<br>
+  <a href="05-verificador.html">Verificador público</a> ·
+  <a href="03a-acesso-comprador.html">Meus números</a> ·
+  <a href="#">Regulamento</a> · <a href="#">Privacidade (LGPD)</a><br>
+  Proibido para menores de 18 anos.
+</footer>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <a class="on" href="08-home-app.html"><span class="ic" aria-hidden="true">🏠</span>Home</a>
+  <a href="03a-acesso-comprador.html"><span class="ic" aria-hidden="true">🎫</span>Meus Bilhetes</a>
+  <a href="03-meus-numeros.html"><span class="ic" aria-hidden="true">👤</span>Perfil</a>
+  <a href="#"><span class="ic" aria-hidden="true">❓</span>Suporte</a>
+</nav>
+
+</body>
+</html>

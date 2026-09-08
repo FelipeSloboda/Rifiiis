@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Resultado da apuração</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;
+  -webkit-font-smoothing:antialiased;min-height:100vh}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--amarelo);outline-offset:2px;border-radius:6px}
+
+.topbar{background:var(--app-bg-dark);color:#fff;padding:13px 0;font-size:13px}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;letter-spacing:-.3px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.topbar a{color:#c3d5f0;text-decoration:none;font-weight:600}
+
+main{max-width:900px;margin:0 auto;padding:26px 20px 60px}
+
+/* página de prova: todo card é DOCUMENTO — denso, legível sobre branco */
+.card{background:var(--card);border:3px solid var(--borda-dura);border-radius:20px;padding:24px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5);margin-bottom:22px}
+
+/* resultado */
+.result{text-align:center;padding:34px 24px}
+.result .lbl{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+.result .n{font-family:var(--mono);font-size:52px;font-weight:700;letter-spacing:-1px;color:var(--acao);margin:8px 0;line-height:1}
+@media(max-width:520px){.result .n{font-size:40px}}
+.result .who{font-size:15px;color:var(--ink-2);margin-top:6px}
+.result .who b{font-weight:800}
+.stamp{display:inline-flex;align-items:center;gap:8px;background:var(--verify-bg);border:2px solid var(--verify);color:var(--verify);font-size:13px;font-weight:800;padding:9px 16px;border-radius:99px;margin-top:16px}
+
+/* passos da regra — R6: cada passo público */
+h2{font-size:16.5px;font-weight:900;letter-spacing:-.3px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.h2sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+.steps{list-style:none;counter-reset:s}
+.steps li{position:relative;padding:0 0 20px 40px;counter-increment:s;border-left:2.5px solid var(--line);margin-left:13px}
+.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+.steps li::before{content:counter(s);position:absolute;left:-15px;top:0;width:28px;height:28px;border-radius:50%;
+  background:#fff;border:2.5px solid var(--borda-dura);color:var(--brand);display:grid;place-items:center;font-size:12.5px;font-weight:900}
+.steps li.ok::before{background:var(--verify);border-color:var(--borda-dura);color:#fff;content:"✓"}
+.steps .t{font-weight:800;font-size:14px;margin-bottom:3px}
+.steps .d{font-size:13px;color:var(--muted);line-height:1.55}
+.steps code{font-family:var(--mono);font-size:12.5px;background:#f6ece0;padding:1.5px 6px;border-radius:6px;color:var(--ink-2)}
+
+/* dados da extração */
+.dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;font-size:13.5px}
+.dl dt{color:var(--muted)}
+.dl dd{font-weight:700;text-align:right;font-family:var(--mono);font-size:13px}
+
+/* commitment — hashes mono sobre creme claro */
+.commit{background:var(--paper);border:2px solid var(--borda-dura);border-radius:14px;padding:16px}
+.commit .row{display:flex;justify-content:space-between;gap:14px;font-size:13px;padding:7px 0;flex-wrap:wrap}
+.commit .row .k{color:var(--muted);flex-shrink:0}
+.commit .row .v{font-family:var(--mono);font-size:11.5px;word-break:break-all;text-align:right;color:var(--ink-2)}
+.acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.btn{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:12px 22px;
+  font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-block;
+  box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn.ghost{background:#fff;color:var(--brand);border:2.5px solid var(--borda-dura);box-shadow:0 4px 0 var(--borda-dura)}
+
+/* entrega — R8.5, o que fecha o loop da tese; verde de prova preservado */
+.delivery{background:var(--verify-bg)}
+.delivery h2{color:var(--verify)}
+.delivery .status{display:flex;align-items:center;gap:10px;font-size:14px;color:#1c5540;margin-bottom:12px}
+.delivery .dl dd{color:#1c5540}
+.delivery .dl dt{color:#3f7259}
+.note{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.55;padding-top:13px;border-top:1px solid var(--line)}
+.delivery .note{color:#1c5540;border-top-color:#bce0cd}
+.foot{text-align:center;font-size:12px;color:#b9cde8;padding:8px 20px 34px;line-height:1.7}
+.foot a{color:var(--amarelo);font-weight:700}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a href="01-campanha.html">← Campanha</a>
+  </div>
+</header>
+
+<main>
+  <!-- ---------- resultado ---------- -->
+  <section class="card result">
+    <div class="lbl">Número apurado</div>
+    <div class="n">217.800</div>
+    <div class="who">Vendido para <b>Maria S.</b> · pedido #A7F2C9</div>
+    <div class="stamp">🔐 Resultado verificável · lista selada antes do sorteio</div>
+  </section>
+
+  <!-- ---------- extração de origem ---------- -->
+  <section class="card">
+    <h2>🎲 Extração da Loteria Federal</h2>
+    <p class="h2sub">Concurso 5.982 · 12/09/2026 · fonte oficial CAIXA</p>
+    <dl class="dl">
+      <dt>1º prêmio</dt><dd>217.800</dd>
+      <dt>2º prêmio</dt><dd>043.119</dd>
+      <dt>3º prêmio</dt><dd>771.204</dd>
+      <dt>Regra da campanha</dt><dd>3 últimos dígitos · 1º prêmio</dd>
+    </dl>
+  </section>
+
+  <!-- ---------- R6: cada passo da regra, público ---------- -->
+  <section class="card">
+    <h2>📐 Como o ganhador foi definido</h2>
+    <p class="h2sub">Cada passo abaixo foi registrado no momento da apuração e não pode ser alterado.</p>
+    <ol class="steps">
+      <li class="ok">
+        <div class="t">Lista de números selada</div>
+        <div class="d">680.000 números vendidos foram congelados às <b>14:00 de 12/09</b>,
+          duas horas antes da extração. Nenhuma venda foi aceita depois disso.</div>
+      </li>
+      <li class="ok">
+        <div class="t">Número formado pela regra</div>
+        <div class="d">3 últimos dígitos do 1º prêmio (<code>217800</code>) → número apurado <code>217800</code>.</div>
+      </li>
+      <li class="ok">
+        <div class="t">Número estava vendido — acerto direto</div>
+        <div class="d">O número <code>217800</code> constava na lista selada.
+          <b>Nenhum passo de aproximação foi necessário.</b></div>
+      </li>
+      <li class="ok">
+        <div class="t">Ganhador identificado</div>
+        <div class="d">Pedido <code>#A7F2C9</code>, pago em 28/08/2026 às 14:32,
+          incluído na lista antes do congelamento.</div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ---------- commitment ---------- -->
+  <section class="card">
+    <h2>🔐 Selo criptográfico</h2>
+    <p class="h2sub">Prova de que a lista não mudou depois do sorteio.</p>
+    <div class="commit">
+      <div class="row"><span class="k">Raiz Merkle</span>
+        <span class="v">7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069</span></div>
+      <div class="row"><span class="k">Números na lista</span><span class="v">680.000</span></div>
+      <div class="row"><span class="k">Algoritmo</span><span class="v">RFC 6962 · SHA-256</span></div>
+      <div class="row"><span class="k">Carimbo do tempo</span><span class="v">12/09/2026 14:02:17 BRT</span></div>
+      <div class="row"><span class="k">Autoridade</span><span class="v">ACT ICP-Brasil</span></div>
+    </div>
+    <div class="acts">
+      <a class="btn" href="05-verificador.html">Verificar por conta própria</a>
+      <a class="btn ghost" href="#">Baixar lista completa (.ndjson · 42 MB)</a>
+    </div>
+    <p class="note">O carimbo foi emitido <b>antes</b> da extração da Federal.
+      Como a lista já estava selada, era impossível incluir ou remover qualquer número
+      depois de conhecido o resultado. A lista não contém CPF nem dado pessoal.</p>
+  </section>
+
+  <!-- ---------- R8.5: entrega, o que fecha o loop ---------- -->
+  <section class="card delivery">
+    <h2>🎁 Entrega do prêmio</h2>
+    <div class="status">✅ <b>Prêmio entregue e confirmado pelo ganhador</b></div>
+    <dl class="dl">
+      <dt>Entregue em</dt><dd>18/09/2026</dd>
+      <dt>Confirmado pelo ganhador em</dt><dd>18/09/2026 17:41</dd>
+      <dt>Forma de entrega</dt><dd>Retirada na concessionária</dd>
+      <dt>Situação da campanha</dt><dd>Encerrada</dd>
+    </dl>
+    <p class="note">Provar quem ganhou não basta: a campanha só encerra com o registro da
+      entrega, confirmado pelo próprio ganhador e gravado na trilha de auditoria.
+      Por privacidade, os dados pessoais do ganhador não são publicados.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <a href="05-verificador.html">Verificador público</a> ·
+  <a href="03-meus-numeros.html">Meus números</a> · <a href="#">Regulamento</a><br>
+  Organizador: Promoções Serra Verde LTDA · Autorização SEAE nº 04.021/2026
+</footer>
+
+</body>
+</html>

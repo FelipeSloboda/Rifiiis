@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Acessar meus números</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;--wa:#1f7a4d;
+  --radius:14px;--radius-sm:10px;--shadow:0 16px 36px -24px rgba(16,24,32,.5);
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:var(--app-bg);min-height:100vh;padding-bottom:74px}
+:where(a,button,input,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+.topbar{background:var(--app-bg-dark);color:#fff;padding:14px 0;font-size:13px}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;letter-spacing:-.3px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.topbar a{color:#cddaea;text-decoration:none}
+
+.shell{display:grid;place-items:center;padding:40px 20px 60px}
+.box{width:100%;max-width:430px}
+h1{font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:5px;text-align:center;color:var(--texto-card)}
+.lead{font-size:14px;color:var(--texto-card);text-align:center;margin-bottom:22px;line-height:1.6;font-weight:500}
+
+.card{background:linear-gradient(165deg,var(--card-laranja),var(--card-laranja-2));
+  border:3px solid var(--borda-dura);border-radius:22px;padding:26px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5)}
+.field{margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:800;color:var(--texto-card);margin-bottom:7px}
+input[type=text],input[type=tel]{width:100%;border:2px solid var(--borda-dura);border-radius:99px;
+  padding:14px 18px;font-size:17px;font-family:var(--mono);background:#fff;color:var(--ink)}
+input:focus{border-color:var(--brand-2)}
+input::placeholder{color:#a9b3c0;font-family:var(--font);font-size:15px}
+
+.btn{width:100%;background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:15px;
+  font-size:15.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;
+  display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn.ghost{background:#fff;color:var(--texto-card);border:2.5px solid var(--borda-dura);margin-top:10px}
+.btn.wa{background:#1f7a4d}
+.btn.wa:hover{background:#186139}
+
+/* escolha do canal */
+.channels{display:grid;gap:10px;margin-bottom:6px}
+.ch{display:flex;align-items:center;gap:12px;border:2px solid var(--borda-dura);border-radius:16px;
+  padding:14px;cursor:pointer;background:#fff;font-family:inherit;text-align:left;width:100%;transition:.15s}
+.ch:hover{border-color:var(--brand-2)}
+.ch.on{background:#fff6e8;box-shadow:0 3px 0 var(--borda-dura)}
+.ch .ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.ch .ic.wa{background:#e3f3ea}
+.ch .ic.mail{background:#eaeef2}
+.ch .t{font-weight:700;font-size:14px;color:var(--texto-card)}
+.ch .s{font-size:12.5px;color:var(--muted);margin-top:1px}
+.ch .rad{margin-left:auto;width:19px;height:19px;border-radius:50%;border:2px solid var(--line);flex-shrink:0}
+.ch.on .rad{border-color:var(--brand);border-width:6px}
+
+/* OTP */
+.otp{display:flex;gap:8px;justify-content:center;margin:4px 0}
+.otp input{width:46px;height:58px;text-align:center;font-size:23px;font-weight:800;
+  font-family:var(--mono);border:2.5px solid var(--borda-dura);border-radius:14px;padding:0;background:#fff}
+.otp input:focus{border-color:var(--brand-2)}
+.otp-help{font-size:13px;color:var(--texto-card);text-align:center;margin:14px 0 18px;line-height:1.6;font-weight:500}
+.otp-help b{color:var(--texto-card)}
+.resend{text-align:center;font-size:12.5px;color:var(--texto-card);margin-top:14px;font-weight:600}
+.resend a{color:#7a2c00;font-weight:800}
+
+/* por que sem senha — evita que o comprador ache que falta algo */
+.why{background:var(--verify-bg);border:1px solid #bce0cd;border-radius:var(--radius-sm);
+  padding:13px 15px;font-size:12.5px;color:#1c5540;line-height:1.55;margin-top:18px;display:flex;gap:9px}
+.why b{display:block;margin-bottom:2px}
+
+.rate{background:var(--warn-bg);border:1px solid #eadcb8;border-radius:var(--radius-sm);
+  padding:12px 14px;font-size:12.5px;color:#6d4d08;line-height:1.55;margin-top:14px;display:flex;gap:9px}
+
+.state-nav{text-align:center;font-size:11.5px;color:#c3d5f0;margin-top:22px;line-height:1.8}
+.state-nav a{color:var(--amarelo);font-weight:700}
+.foot{text-align:center;font-size:11.5px;color:#b9cde8;margin-top:18px;line-height:1.7}
+.foot a{color:var(--amarelo)}
+
+/* barra de navegação inferior — padrão mobile do mockup */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--app-bg-dark);
+  display:flex;justify-content:space-around;padding:9px 4px 11px;z-index:50;
+  border-top:2px solid rgba(255,255,255,.12)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:700;color:#9db6dc;text-decoration:none;padding:3px 10px;min-width:64px}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--amarelo)}
+.tabbar a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a href="01-campanha.html">← Campanha</a>
+  </div>
+</header>
+
+<div class="shell">
+  <div class="box">
+
+    <!-- ========== PASSO 2: código (padrão) ========== -->
+    <section class="card" id="s2">
+      <h1>Digitis o códigis!</h1>
+      <p class="lead">Enviamos um código de 6 dígitos para o WhatsApp<br>
+        <b>(11) •••••-4321</b></p>
+
+      <div class="otp" role="group" aria-label="Código de 6 dígitos">
+        <input type="text" inputmode="numeric" maxlength="1" value="4" aria-label="Dígito 1">
+        <input type="text" inputmode="numeric" maxlength="1" value="8" aria-label="Dígito 2">
+        <input type="text" inputmode="numeric" maxlength="1" value="2" aria-label="Dígito 3">
+        <input type="text" inputmode="numeric" maxlength="1" value="0" aria-label="Dígito 4">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 5">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Dígito 6">
+      </div>
+      <p class="otp-help">O código vale por <b>10 minutos</b>.</p>
+
+      <a class="btn primaria" href="03-meus-numeros.html">Entrar</a>
+      <p class="resend">Não recebeu? <a href="#">Reenviar em 0:42</a> ·
+        <a href="#">Usar e-mail</a></p>
+
+      <div class="rate">
+        <span aria-hidden="true">🛡️</span>
+        <span>Por segurança, são permitidas até <b>5 tentativas</b>.
+          Depois disso é preciso pedir um código novo.</span>
+      </div>
+    </section>
+
+    <!-- ========== PASSO 1: CPF + canal ========== -->
+    <section class="card" id="s1" style="display:none">
+      <h1>Acessar meus bilhetis!</h1>
+      <p class="lead">Informe seu CPF. Enviamos um código para você entrar —
+        sem senha para criar nem lembrar.</p>
+
+      <div class="field">
+        <label for="cpf">CPF</label>
+        <input id="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00"
+               value="123.456.789-09" autocomplete="off">
+      </div>
+
+      <label style="margin-bottom:9px">Onde quer receber o código?</label>
+      <div class="channels" role="group" aria-label="Canal de envio do código">
+        <button class="ch on" type="button" aria-pressed="true">
+          <span class="ic wa" aria-hidden="true">💬</span>
+          <span>
+            <span class="t">WhatsApp</span>
+            <span class="s">(11) •••••-4321</span>
+          </span>
+          <span class="rad" aria-hidden="true"></span>
+        </button>
+        <button class="ch" type="button" aria-pressed="false">
+          <span class="ic mail" aria-hidden="true">✉️</span>
+          <span>
+            <span class="t">E-mail</span>
+            <span class="s">m•••••@email.com</span>
+          </span>
+          <span class="rad" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <button class="btn wa" type="button" style="margin-top:16px">
+        <span aria-hidden="true">💬</span> Enviar código pelo WhatsApp
+      </button>
+
+      <div class="why">
+        <span aria-hidden="true">🔓</span>
+        <span><b>Por que não pedimos senha?</b>
+          Você compra em segundos e volta raramente — uma senha só seria mais uma
+          coisa para esquecer. O código prova que o telefone é seu, e isso basta.</span>
+      </div>
+    </section>
+
+    <p class="state-nav">
+      Estados no protótipo:
+      <a href="#" onclick="document.getElementById('s1').style.display='block';document.getElementById('s2').style.display='none';return false">1 · CPF e canal</a> ·
+      <a href="#" onclick="document.getElementById('s2').style.display='block';document.getElementById('s1').style.display='none';return false">2 · código</a>
+    </p>
+
+    <p class="foot">
+      Seus dados são usados apenas para identificar suas compras.<br>
+      <a href="#">Política de privacidade (LGPD)</a>
+    </p>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <a href="01-campanha.html"><span class="ic" aria-hidden="true">🏠</span>Home</a>
+  <a class="on" href="03-meus-numeros.html"><span class="ic" aria-hidden="true">🎫</span>Meus Bilhetes</a>
+  <a href="03-meus-numeros.html"><span class="ic" aria-hidden="true">👤</span>Perfil</a>
+  <a href="#"><span class="ic" aria-hidden="true">❓</span>Suporte</a>
+</nav>
+
+</body>
+</html>

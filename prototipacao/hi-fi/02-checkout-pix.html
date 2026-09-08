@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Checkout Pix</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;
+  -webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:78px}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.topbar{background:var(--app-bg-dark);color:#fff;padding:12px 0;font-size:13px}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;letter-spacing:-.3px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.topbar a{color:#c3d5f0;text-decoration:none;font-weight:600}
+
+/* passos do checkout — reduz ansiedade, mostra que falta pouco */
+.steps{max-width:760px;margin:0 auto;padding:22px 20px 0;display:flex;align-items:center;gap:6px;font-size:12.5px}
+.step{display:flex;align-items:center;gap:7px;color:#fff;font-weight:700}
+.step .n{width:25px;height:25px;border-radius:50%;background:#fff;border:2.5px solid var(--borda-dura);
+  display:grid;place-items:center;font-weight:900;font-size:11.5px;color:var(--brand)}
+.step.done .n{background:#fff;color:var(--brand)}
+.step.on{color:var(--amarelo);font-weight:900}
+.step.on .n{background:var(--amarelo);color:var(--borda-dura)}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,.4);min-width:10px;border-radius:2px}
+
+main{max-width:760px;margin:0 auto;padding:20px 20px 40px}
+
+/* cronômetro da reserva — R3, 15 min */
+.timer{background:var(--warn-bg);border:3px solid var(--borda-dura);border-radius:16px;
+  padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:18px;
+  box-shadow:0 4px 0 var(--borda-dura)}
+.timer .clock{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--warn);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.timer .txt{font-size:13px;color:#6d4d08;line-height:1.4}
+.timer .txt b{display:block;font-size:13.5px;color:var(--warn)}
+
+/* card AÇÃO (laranja) por padrão; .doc = card DOCUMENTO (branco) */
+.card{background:linear-gradient(165deg,var(--card-laranja),var(--card-laranja-2));
+  border:3px solid var(--borda-dura);border-radius:20px;padding:22px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5);margin-bottom:20px}
+.card.doc{background:#fff}
+h1{font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:5px;color:var(--texto-card)}
+.lead{color:var(--texto-card);font-size:14px;font-weight:500;margin-bottom:20px}
+
+/* QR + copia-e-cola — sub-blocos brancos sobre o card laranja */
+.pix-area{display:grid;grid-template-columns:190px 1fr;gap:22px;align-items:start}
+@media(max-width:640px){.pix-area{grid-template-columns:1fr}}
+.qr{width:190px;height:190px;background:#fff;border:2.5px solid var(--borda-dura);border-radius:14px;
+  display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center;justify-self:center}
+.qr .grid-ph{width:150px;height:150px;background:
+  repeating-linear-gradient(90deg,var(--ink) 0 7px,#fff 7px 14px),
+  repeating-linear-gradient(0deg,var(--ink) 0 7px,#fff 7px 14px);
+  background-blend-mode:difference;opacity:.82;border-radius:4px}
+
+.copy-label{font-size:12.5px;font-weight:800;color:var(--texto-card);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+.copy-box{display:flex;gap:8px;align-items:center;background:#fff;border:2.5px solid var(--borda-dura);
+  border-radius:14px;margin-bottom:10px;padding:6px}
+.copy-box code{flex:1;padding:8px 10px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.copy-box button{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;
+  padding:9px 17px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap;
+  flex-shrink:0;box-shadow:0 3px 0 var(--borda-dura)}
+.copy-box button:hover{background:var(--acao-hover)}
+.pix-help{font-size:13px;color:var(--texto-card);font-weight:500;line-height:1.6}
+.pix-help ol{margin:8px 0 0 18px}
+.pix-help li{margin-bottom:4px}
+
+/* estado de espera — semântica azulada preservada, cantos arredondados */
+.waiting{display:flex;align-items:center;gap:11px;background:#eef4fb;border:2px solid #cfe0f2;
+  border-radius:14px;padding:13px 15px;margin-top:18px;font-size:13.5px;color:#123a6b}
+.spin{width:17px;height:17px;border:2.5px solid #bcd3ea;border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* resumo — card DOCUMENTO branco */
+.summary h2{font-size:16px;font-weight:900;letter-spacing:-.3px;margin-bottom:13px}
+.line{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;color:var(--ink-2)}
+.line.tot{border-top:2px solid var(--line);margin-top:6px;padding-top:13px;font-size:19px;font-weight:900;color:var(--ink)}
+.nums-note{background:#f7efe4;border-radius:14px;padding:12px 14px;font-size:12.5px;color:var(--ink-2);margin-top:14px;display:flex;gap:9px;line-height:1.5}
+
+/* o que acontece depois — verde de prova, reservado; só arredonda */
+.after{background:var(--verify-bg);border:2px solid #bce0cd;border-radius:14px;padding:14px 16px;margin-top:16px}
+.after b{color:var(--verify);font-size:13.5px;display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.after p{font-size:12.5px;color:#1c5540;line-height:1.55}
+.foot{text-align:center;font-size:12px;color:#b9cde8;padding:8px 20px 30px;line-height:1.7}
+.foot a{color:var(--amarelo)}
+
+/* barra de navegação inferior — padrão mobile do mockup */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--app-bg-dark);
+  display:flex;justify-content:space-around;padding:9px 4px 11px;z-index:50;
+  border-top:2px solid rgba(255,255,255,.12)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:700;color:#9db6dc;text-decoration:none;padding:3px 10px;min-width:64px}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--amarelo)}
+.tabbar a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a href="02a-cadastro.html">← Voltar aos seus dados</a>
+  </div>
+</header>
+
+<nav class="steps" aria-label="Progresso do checkout">
+  <div class="step done"><span class="n">✓</span> Números</div>
+  <div class="step-line"></div>
+  <div class="step done"><span class="n">✓</span> Cadastro</div>
+  <div class="step-line"></div>
+  <div class="step on"><span class="n">3</span> Pagamento</div>
+</nav>
+
+<main>
+  <!-- R3: reserva de 15 min, com devolução ao estoque -->
+  <div class="timer" role="status">
+    <span class="clock">13:42</span>
+    <span class="txt">
+      <b>Seus números estão reservados</b>
+      Se o Pix não for pago nesse prazo, eles voltam para o estoque.
+    </span>
+  </div>
+
+  <section class="card">
+    <h1>Pague R$ 25,00 com Pix</h1>
+    <p class="lead">Escaneie o QR Code ou copie o código abaixo no app do seu banco.</p>
+
+    <div class="pix-area">
+      <div class="qr"><div class="grid-ph" role="img" aria-label="QR Code do pagamento Pix"></div></div>
+      <div>
+        <span class="copy-label">Pix copia e cola</span>
+        <div class="copy-box">
+          <code>00020126580014br.gov.bcb.pix0136f7a2c9e1-4b3d-8a52-1c6f9e0d4b72520400005303986540525.005802BR</code>
+          <button type="button">Copiar</button>
+        </div>
+        <div class="pix-help">
+          <ol>
+            <li>Abra o app do seu banco</li>
+            <li>Escolha <b>Pix › Pagar com QR Code</b> ou <b>Pix copia e cola</b></li>
+            <li>Confirme o valor de <b>R$ 25,00</b></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="waiting" role="status" aria-live="polite">
+      <span class="spin" aria-hidden="true"></span>
+      <span>Aguardando a confirmação do pagamento… Assim que o Pix cair, seus números aparecem automaticamente.</span>
+    </div>
+  </section>
+
+  <section class="card doc summary">
+    <h2>Resumo do pedido</h2>
+    <div class="line"><span>Campanha</span><span>Honda CB 500F 2026</span></div>
+    <div class="line"><span>Números</span><span><b>50</b> × R$ 0,50</span></div>
+    <div class="line"><span>Comprador</span><span>Maria S. · CPF •••.456.789-••</span></div>
+    <div class="line tot"><span>Total</span><span>R$ 25,00</span></div>
+
+    <div class="nums-note">
+      <span>🔒</span>
+      <span>Seus números só são sorteados <b>depois</b> de confirmados.
+            Eles entram na lista selada antes do sorteio — e você receberá um
+            comprovante que prova isso.</span>
+    </div>
+
+    <div class="after">
+      <b>✅ O que acontece quando o Pix cair</b>
+      <p>Seus 50 números são atribuídos na hora e ficam disponíveis em
+         “Meus números”, junto com o comprovante de inclusão na lista selada.
+         Você também recebe por e-mail.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  Pagamento processado por PSP homologado · Ambiente seguro (TLS)<br>
+  <a href="01-campanha.html">Voltar à campanha</a> · <a href="#">Preciso de ajuda</a>
+</footer>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <a href="08-home-app.html"><span class="ic" aria-hidden="true">🏠</span>Home</a>
+  <a href="03a-acesso-comprador.html"><span class="ic" aria-hidden="true">🎫</span>Meus Bilhetes</a>
+  <a href="03-meus-numeros.html"><span class="ic" aria-hidden="true">👤</span>Perfil</a>
+  <a href="#"><span class="ic" aria-hidden="true">❓</span>Suporte</a>
+</nav>
+
+</body>
+</html>

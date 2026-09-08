@@ -1,0 +1,95 @@
+/* ============================================================
+   Rifiiis — design tokens
+   Plataforma de rifa com apuração verificável
+   Companion de: PRD v1.6 / SPEC-TECNICA v1.5
+   ============================================================
+
+   PRINCÍPIO DE COR
+   Laranja quente + azul institucional: vocabulário popular,
+   pensado para tráfego que chega de Instagram e WhatsApp.
+
+   Mas com uma disciplina que não se abre:
+   --verify é RESERVADO. Nunca decorativo. Se está verde-selo,
+   é porque algo foi criptograficamente provado. Numa paleta
+   laranja/azul o verde é a única cor que não aparece em mais
+   nada — e é isso que faz o selo significar alguma coisa.
+
+   DIVISÃO DE PAPÉIS
+     laranja  = ação e venda (CTA, progresso, urgência)
+     azul     = marca, estrutura, navegação
+     verde    = prova criptográfica, e nada mais
+     dourado  = prêmio ganho
+   ============================================================ */
+
+:root{
+  /* superfícies */
+  --ink:#14243a;         /* azul-tinta: texto principal e topo */
+  --ink-2:#31465f;       /* texto secundário forte */
+  --paper:#fdf6ee;       /* papel quente */
+  --card:#ffffff;
+  --line:#ecdfd0;
+  --muted:#5e6b7c;
+
+  /* ação (CTA) — o laranja da identidade */
+  --acao:#c94508;        /* botões COM texto branco — 4,84:1, passa AA */
+  --acao-viva:#e8590c;   /* superfícies e gradientes — 3,58:1, NUNCA com texto */
+  --acao-hover:#a83700;
+
+  /* marca */
+  --brand:#123a6b;       /* azul institucional */
+  --brand-2:#1b5aa8;     /* foco e realce */
+
+  /* semânticas */
+  --verify:#0f6b46;      /* SELO DE PROVA — uso restrito */
+  --verify-bg:#e6f4ec;
+  --warn:#8a5f00;
+  --warn-bg:#fdf3dc;
+  --danger:#a3232b;
+  --danger-bg:#fbeaea;
+  --gold:#8a6a1f;        /* prêmio ganho */
+  --gold-bg:#fdf6e3;
+  --pix:#0f7c86;
+
+  /* progresso — é venda, logo laranja */
+  --bar:#ecdfd0;
+  --bar-fill:#e8590c;
+
+  /* forma */
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow:0 16px 36px -24px rgba(20,36,58,.5);
+  --shadow-sm:0 2px 8px -4px rgba(20,36,58,.3);
+
+  /* tipografia */
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font);
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* foco visível — requisito de a11y, nunca remover */
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:3px solid var(--brand-2);
+  outline-offset:2px;
+  border-radius:4px;
+}
+
+/* utilitário para leitor de tela */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
+/* respeita preferência de menos movimento */
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important}
+}

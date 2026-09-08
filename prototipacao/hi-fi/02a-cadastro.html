@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Seus dados</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --radius:20px;--radius-sm:14px;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;
+  -webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:78px}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.topbar{background:var(--app-bg-dark);color:#fff;padding:12px 0;font-size:13px}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:17px;letter-spacing:-.3px}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--acao-viva),#f5a623);display:grid;place-items:center;font-size:14px}
+.topbar a{color:#cddaea;text-decoration:none;font-weight:600}
+
+/* progresso do checkout — agora sobre o fundo azul */
+.steps{max-width:760px;margin:0 auto;padding:22px 20px 0;display:flex;align-items:center;gap:6px;font-size:12.5px}
+.step{display:flex;align-items:center;gap:7px;color:#c9d9f2;font-weight:600}
+.step .n{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.16);
+  border:2px solid rgba(255,255,255,.4);display:grid;place-items:center;font-weight:800;font-size:11.5px;color:#fff}
+.step.done .n{background:var(--amarelo);border-color:var(--borda-dura);color:var(--borda-dura)}
+.step.on{color:#fff;font-weight:800}
+.step.on .n{background:#fff;border-color:var(--borda-dura);color:var(--brand)}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,.3);min-width:10px;border-radius:2px}
+
+main{max-width:760px;margin:0 auto;padding:20px 20px 40px}
+/* card de AÇÃO: o formulário é o convite da tela */
+.card{background:linear-gradient(165deg,var(--card-laranja),var(--card-laranja-2));
+  border:3px solid var(--borda-dura);border-radius:22px;padding:26px 22px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5);margin-bottom:18px}
+h1{font-size:22px;font-weight:900;letter-spacing:-.4px;margin-bottom:5px;color:var(--texto-card)}
+.lead{color:var(--texto-card);font-size:14px;margin-bottom:20px;font-weight:500}
+
+/* resumo compacto do que está sendo comprado — âncora de contexto (sub-card branco) */
+.mini{display:flex;align-items:center;gap:13px;background:#fff;border:2px solid var(--borda-dura);
+  border-radius:14px;padding:12px 14px;margin-bottom:22px;font-size:13.5px;
+  box-shadow:0 3px 0 var(--borda-dura)}
+.mini .ic{width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,#e4ecf5,#c6d8ea);display:grid;place-items:center;font-size:19px;flex-shrink:0}
+.mini .t{font-weight:700;color:var(--ink)}
+.mini .s{color:var(--muted);font-size:12.5px}
+.mini .v{margin-left:auto;font-weight:900;font-size:17px;white-space:nowrap;color:var(--ink)}
+
+/* formulário */
+.fields{display:grid;gap:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.row2{grid-template-columns:1fr}}
+.field label{display:block;font-size:13px;font-weight:800;color:var(--texto-card);margin-bottom:7px}
+.field label .req{color:#7a2c00}
+.field input{width:100%;border:2px solid var(--borda-dura);border-radius:99px;padding:13px 16px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+.field input:focus{border-color:var(--brand-2)}
+.field input::placeholder{color:#a9b3c0}
+.help{font-size:12.5px;color:var(--texto-card);margin-top:6px;display:flex;align-items:center;gap:5px;font-weight:500}
+
+/* R7: erro aponta o campo, em linguagem comum — danger sempre sobre fundo claro */
+.field.err input{border-color:var(--danger);background:#fffbfb}
+.err-msg{font-size:12.5px;color:var(--danger);margin-top:7px;display:flex;align-items:flex-start;gap:6px;font-weight:600;
+  background:var(--danger-bg);border:2px solid var(--danger);border-radius:12px;padding:9px 12px}
+.err-msg .ic{flex-shrink:0}
+
+/* R7: comprador recorrente reconhecido pelo CPF (sub-card branco; verde fica reservado à prova) */
+.known{background:#fff;border:2px solid var(--borda-dura);border-radius:14px;padding:13px 15px;margin-top:8px;display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-2)}
+.known b{display:block;margin-bottom:2px;color:var(--ink)}
+.known a{color:var(--brand);font-weight:700}
+
+/* consentimento LGPD — sub-bloco branco para o texto pequeno não ficar sobre laranja */
+.consent{margin-top:22px;background:#fff;border:2px solid var(--borda-dura);border-radius:16px;padding:16px;display:grid;gap:13px}
+.check{display:flex;gap:11px;align-items:flex-start;font-size:13px;color:var(--ink-2);line-height:1.55}
+.check input[type=checkbox]{width:19px;height:19px;margin-top:1px;flex-shrink:0;accent-color:var(--brand);cursor:pointer}
+.check label{cursor:pointer}
+.check a{color:var(--brand);font-weight:700}
+.check .ver{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* 18+ */
+.age-gate{background:var(--warn-bg);border:2px solid #d9c07a;border-radius:14px;padding:12px 14px;font-size:12.5px;color:#6d4d08;display:flex;gap:9px;margin-top:16px;line-height:1.5}
+
+.cta{width:100%;background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:15px;font-size:15.5px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;box-shadow:0 4px 0 var(--borda-dura)}
+.cta:hover{background:var(--acao-hover)}
+.cta.off{background:#c2cbc9;color:#f4f6f6;cursor:not-allowed;pointer-events:none;border-color:#8f9c99;box-shadow:0 4px 0 #8f9c99}
+.cta .pix-ic{width:17px;height:17px;background:#fff;border-radius:3px;display:grid;place-items:center;color:var(--pix);font-size:11px;font-weight:800}
+.cta-note{font-size:12px;color:var(--texto-card);text-align:center;margin-top:11px;line-height:1.5;font-weight:500}
+
+/* privacidade — reduz atrito de dar CPF (sub-card branco) */
+.privacy{background:#fff;border:2px solid var(--borda-dura);border-radius:14px;padding:13px 15px;font-size:12.5px;color:var(--ink-2);display:flex;gap:9px;line-height:1.55;margin-top:16px}
+.foot{text-align:center;font-size:12px;color:#b9cde8;padding:8px 20px 30px;line-height:1.7}
+.foot a{color:var(--amarelo);font-weight:700}
+
+/* barra de navegação inferior — padrão mobile do mockup */
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--app-bg-dark);
+  display:flex;justify-content:space-around;padding:9px 4px 11px;z-index:50;
+  border-top:2px solid rgba(255,255,255,.12)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:700;color:#9db6dc;text-decoration:none;padding:3px 10px;min-width:64px}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--amarelo)}
+.tabbar a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a href="01-campanha.html">← Voltar à campanha</a>
+  </div>
+</header>
+
+<nav class="steps" aria-label="Progresso do checkout">
+  <div class="step done"><span class="n">✓</span> Números</div>
+  <div class="step-line"></div>
+  <div class="step on"><span class="n">2</span> Cadastro</div>
+  <div class="step-line"></div>
+  <div class="step"><span class="n">3</span> Pagamento</div>
+</nav>
+
+<main>
+  <section class="card">
+    <h1>Seus dados</h1>
+    <p class="lead">Só o necessário para emitir o Pix e garantir seus números.</p>
+
+    <!-- contexto do que está sendo comprado -->
+    <div class="mini">
+      <span class="ic" aria-hidden="true">🏍️</span>
+      <span>
+        <span class="t">Honda CB 500F 2026</span>
+        <span class="s">50 números × R$ 0,50</span>
+      </span>
+      <span class="v">R$ 25,00</span>
+    </div>
+
+    <form class="fields" onsubmit="return false" novalidate>
+      <!-- CPF primeiro: é a identidade natural e permite reconhecer recorrente -->
+      <div class="field">
+        <label for="cpf">CPF <span class="req" aria-hidden="true">*</span></label>
+        <input id="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00"
+               autocomplete="off" value="123.456.789-09" aria-describedby="cpf-known">
+        <div class="known" id="cpf-known" role="status">
+          <span aria-hidden="true">👋</span>
+          <span><b>Que bom te ver de novo, Maria!</b>
+            Seus dados já estão preenchidos. <a href="#">Não é você?</a></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="nome">Nome completo <span class="req" aria-hidden="true">*</span></label>
+        <input id="nome" type="text" placeholder="Como está no seu documento"
+               autocomplete="name" value="Maria Silva Souza">
+      </div>
+
+      <div class="row2">
+        <!-- estado de erro: menor de 18 (R7 + R8) -->
+        <div class="field err">
+          <label for="nasc">Data de nascimento <span class="req" aria-hidden="true">*</span></label>
+          <input id="nasc" type="text" inputmode="numeric" placeholder="DD/MM/AAAA"
+                 value="14/03/2010" aria-invalid="true" aria-describedby="nasc-err">
+          <p class="err-msg" id="nasc-err" role="alert">
+            <span class="ic" aria-hidden="true">⚠️</span>
+            <span>É preciso ter 18 anos ou mais para participar.
+              Confira a data — se estiver certa, você ainda não pode comprar.</span>
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="tel">Celular <span class="req" aria-hidden="true">*</span></label>
+          <input id="tel" type="tel" inputmode="tel" placeholder="(00) 00000-0000"
+                 autocomplete="tel" value="(11) 98765-4321" aria-describedby="tel-help">
+          <p class="help" id="tel-help">
+            <span aria-hidden="true">💬</span> Usado para consultar seus números depois.
+          </p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">E-mail <span class="req" aria-hidden="true">*</span></label>
+        <input id="email" type="email" inputmode="email" placeholder="voce@email.com"
+               autocomplete="email" value="maria.souza@email.com" aria-describedby="email-help">
+        <p class="help" id="email-help">
+          <span aria-hidden="true">📩</span> Enviamos seus números e o comprovante verificável.
+        </p>
+      </div>
+
+      <!-- R7/R8: consentimento com versão registrada -->
+      <div class="consent">
+        <div class="check">
+          <input type="checkbox" id="reg" checked>
+          <label for="reg">
+            Li e aceito o <a href="#">regulamento da campanha</a>
+            <span class="ver">(versão 3 · vigente desde 12/08/2026)</span>
+          </label>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="lgpd" checked>
+          <label for="lgpd">
+            Autorizo o uso dos meus dados para participar desta campanha,
+            conforme a <a href="#">política de privacidade</a>.
+          </label>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="opt">
+          <label for="opt">
+            Quero receber avisos sobre esta campanha por WhatsApp <em>(opcional)</em>
+          </label>
+        </div>
+      </div>
+
+      <div class="age-gate">
+        <span aria-hidden="true">🔞</span>
+        <span>Ao continuar, você declara ter <b>18 anos ou mais</b>.
+          Participação proibida para menores de idade.</span>
+      </div>
+
+      <a class="cta off" href="02-checkout-pix.html" aria-disabled="true">
+        <span class="pix-ic" aria-hidden="true">P</span> Continuar para o pagamento
+      </a>
+      <p class="cta-note">Corrija os campos destacados para continuar.<br>
+        Seus números ficam reservados por 15 minutos a partir da geração do Pix.</p>
+
+      <p style="font-size:11.5px;color:var(--texto-card);text-align:center;margin-top:16px;
+                padding-top:13px;border-top:1px dashed rgba(15,47,99,.45);line-height:1.5">
+        <b>Nota do protótipo:</b> esta tela mostra deliberadamente o estado de <i>erro</i>
+        (menor de 18) para documentar o comportamento de R7.<br>
+        No estado válido, o botão fica ativo e leva ao pagamento —
+        <a href="02-checkout-pix.html" style="color:#7a2c00;font-weight:800">ver passo 3</a>.
+      </p>
+    </form>
+
+    <div class="privacy">
+      <span aria-hidden="true">🔒</span>
+      <span>Seu CPF é usado apenas para identificar sua compra e cumprir o regulamento.
+        Ele <b>nunca</b> aparece na lista pública de números nem em qualquer
+        página do site.</span>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <a href="01-campanha.html">Voltar à campanha</a> ·
+  <a href="#">Política de privacidade (LGPD)</a> · <a href="#">Regulamento</a><br>
+  Proibido para menores de 18 anos.
+</footer>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <a class="on" href="08-home-app.html"><span class="ic" aria-hidden="true">🏠</span>Home</a>
+  <a href="03a-acesso-comprador.html"><span class="ic" aria-hidden="true">🎫</span>Meus Bilhetes</a>
+  <a href="03-meus-numeros.html"><span class="ic" aria-hidden="true">👤</span>Perfil</a>
+  <a href="#"><span class="ic" aria-hidden="true">❓</span>Suporte</a>
+</nav>
+
+</body>
+</html>
