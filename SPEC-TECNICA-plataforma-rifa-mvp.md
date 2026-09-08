@@ -176,15 +176,29 @@ Publicados via outbox transacional (tabela `evento_outbox` escrita na mesma tran
 CREATE TABLE operador (
   id                UUID PRIMARY KEY,
   tenant_id         UUID NOT NULL,
-  email             CITEXT NOT NULL UNIQUE,
+  email             CITEXT NOT NULL,        -- unicidade no índice parcial abaixo
   senha_hash        TEXT NOT NULL,          -- Argon2id
   nome              TEXT NOT NULL,
   totp_secret_cifrado BYTEA,                -- NULL até o primeiro acesso ativar
   totp_ativado_em   TIMESTAMPTZ,
   bloqueado_ate     TIMESTAMPTZ,            -- bloqueio temporário por tentativas
   tentativas_falhas SMALLINT NOT NULL DEFAULT 0,
-  criado_em         TIMESTAMPTZ NOT NULL DEFAULT now()
+  criado_em         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Desligamento: revoga acesso sem apagar a linha. As FKs de auditoria e de
+  -- extracao_tentativa apontam para cá; DELETE destruiria a atribuição de quem
+  -- autorizou a apuração manual, que é o controle do ADR-16.
+  desativado_em     TIMESTAMPTZ,
+  -- Anonimização (art. 16): executada no fim do prazo legal, não no desligamento.
+  -- Zera e-mail/nome/segredos preservando id, tenant_id e as FKs.
+  anonimizado_em    TIMESTAMPTZ,
+  CONSTRAINT anonimizado_exige_desativado
+    CHECK (anonimizado_em IS NULL OR desativado_em IS NOT NULL)
 );
+
+-- e-mail único apenas entre operadores vivos: liberar o endereço após a
+-- anonimização permite recontratar a mesma pessoa sem colidir com a linha morta.
+CREATE UNIQUE INDEX idx_operador_email_ativo
+  ON operador (email) WHERE anonimizado_em IS NULL;
 
 -- códigos de recuperação: hash, uso único
 CREATE TABLE operador_codigo_recuperacao (
@@ -203,12 +217,57 @@ CREATE TABLE sessao (
   segundo_fator_em TIMESTAMPTZ,   -- NULL = login iniciado, 2FA ainda não verificado
   expira_em     TIMESTAMPTZ NOT NULL,
   revogada_em   TIMESTAMPTZ,
-  criada_em     TIMESTAMPTZ NOT NULL DEFAULT now()
+  criada_em     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Prazo de expurgo do par (ip, user_agent). Fixo em 90 dias: cobre a janela de
+  -- investigação de acesso indevido sem virar histórico de localização do operador.
+  purgar_em     TIMESTAMPTZ NOT NULL DEFAULT now() + INTERVAL '90 days',
+  purgada_em    TIMESTAMPTZ
 );
 
 -- sessão sem segundo_fator_em NÃO autoriza nenhuma rota /api/admin/*
 CREATE INDEX idx_sessao_ativa ON sessao (operador_id)
   WHERE revogada_em IS NULL;
+
+-- fila do worker de expurgo: só o que ainda tem PII e já venceu
+CREATE INDEX idx_sessao_a_purgar ON sessao (purgar_em)
+  WHERE purgada_em IS NULL;
+
+-- ── Comprador ───────────────────────────────────────────
+-- Concentra TODA a PII do produto. É a tabela que o crypto-shredding protege:
+-- cada titular tem sua própria chave (`chave_dek_cifrada`), e apagá-la torna
+-- os campos ilegíveis sem remover um único byte — o que preserva o hash chain
+-- da auditoria (§9).
+CREATE TABLE comprador (
+  id                UUID PRIMARY KEY,
+  tenant_id         UUID NOT NULL,
+
+  -- PII cifrada sob a DEK do próprio titular (AES-256-GCM, nonce por campo)
+  nome_cifrado      BYTEA NOT NULL,
+  cpf_cifrado       BYTEA NOT NULL,
+  nascimento_cifrado BYTEA NOT NULL,
+  telefone_cifrado  BYTEA NOT NULL,
+  email_cifrado     BYTEA,
+
+  -- Chave de dados do titular, embrulhada pela KEK externa (envelope encryption).
+  -- Apagar esta coluna É o shredding. A KEK nunca toca o banco.
+  chave_dek_cifrada BYTEA,
+  chave_apagada_em  TIMESTAMPTZ,      -- carimbo do exercício do art. 18
+
+  -- Índice cego do CPF: permite achar o titular e aplicar o limite por campanha
+  -- sem manter o CPF legível. Ver §9 para por que é Argon2id e não HMAC.
+  cpf_indice        BYTEA NOT NULL,
+
+  criado_em         TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  -- DEK apagada e PII presente é o estado esperado após o shredding;
+  -- o inverso (carimbo sem apagar a chave) é bug e o banco recusa.
+  CONSTRAINT shredding_coerente
+    CHECK ((chave_apagada_em IS NULL) = (chave_dek_cifrada IS NOT NULL))
+);
+
+-- Um comprador por CPF por tenant: é o que sustenta o limite do art. da campanha
+-- e a consulta "meus números". Sobrevive ao shredding — cpf_indice não é cifrado.
+CREATE UNIQUE INDEX idx_comprador_cpf ON comprador (tenant_id, cpf_indice);
 
 -- ── Acesso do comprador por código (R7.5) ───────────────
 -- Sem senha: o código de uso único prova posse do canal.
@@ -593,10 +652,16 @@ Lista de todos os números com pedido em `PAGO`, ordenada crescente por número.
 Onde `h` é o *leaf hash* e `t` o timestamp do pagamento. **CPF não aparece.** O leaf é:
 
 ```
-leaf = SHA256( 0x00 ‖ numero_be32 ‖ HMAC-SHA256(cpf, salt_campanha) ‖ pedido_id ‖ pago_em_iso )
+leaf = SHA256( 0x00 ‖ numero_be32 ‖ Argon2id(cpf, salt_campanha) ‖ pedido_id ‖ pago_em_iso )
 ```
 
-O `salt_campanha` é gerado por campanha e **nunca publicado**. Sem ele, os 10¹¹ CPFs possíveis não são força-brutáveis a partir do leaf. O comprador não precisa do salt: ele recebe o leaf pronto no comprovante e apenas confere que ele consta na árvore.
+O `salt_campanha` é gerado por campanha e **nunca publicado**. Ele é o que impede reidentificar compradores a partir do snapshot — que é um artefato **público e permanente**, o pior lugar possível para um derivado fraco.
+
+A primitiva é Argon2id, não HMAC, pela mesma razão de `cpf_indice` (§9): o espaço real de CPFs é ~10⁹, não 10¹¹ — os dois dígitos verificadores são determinísticos — e HMAC é rápido o bastante para varrê-lo numa GPU caso o salt vaze. Argon2id (`m=64MiB, t=3, p=1`) torna essa varredura inviável. O custo entra na construção do snapshot, que é assíncrona e roda uma vez por campanha: 1M de folhas a ~50ms cada exige paralelismo — a derivação é feita em pool de workers durante a Fase 2, não na Fase 3.
+
+Salt **distinto** do de `cpf_indice`, deliberadamente: reusar permitiria cruzar o snapshot publicado com a base e reidentificar por interseção.
+
+O comprador não precisa do salt: ele recebe o leaf pronto no comprovante e apenas confere que ele consta na árvore.
 
 ### Fase 3 — Árvore Merkle
 
@@ -883,7 +948,14 @@ GET   /api/admin/apuracoes/:id/tentativas    histórico de obtenção da extraç
 POST  /api/admin/apuracoes/:id/reprocessar   nova tentativa imediata na fonte oficial
 POST  /api/admin/apuracoes/:id/manual        entrada manual assistida (exige 2 responsáveis)
 POST  /api/admin/apuracoes/:id/confirmar     segunda confirmação de manual ou retificação
+GET   /api/admin/operadores                  operadores do tenant, com situação (ativo/desligado)
+POST  /api/admin/operadores/:id/desativar    desliga: revoga sessões e bloqueia login (exige 2º fator)
 ```
+
+`desativar` **não** apaga o operador — carimba `desativado_em` e revoga as sessões na mesma
+transação. Não existe rota de exclusão: a anonimização acontece por prazo, executada pelo
+worker de retenção, nunca a pedido pela API. Expor um botão que apaga o autor de uma apuração
+manual seria entregar ao fraudador o apagador do próprio rastro.
 
 ### Webhook
 
@@ -906,12 +978,14 @@ POST /webhooks/psp/:provedor
 | Força bruta de login | Bloqueio temporário por tentativas; resposta idêntica para e-mail inexistente e senha errada |
 | Segredo do TOTP | Cifrado em coluna, sob a mesma chave externa dos demais segredos |
 | Autorização | Guard por rota + verificação de `tenant_id` no repositório |
-| Segredos | Variáveis de ambiente; `salt_campanha` em coluna cifrada com chave externa |
+| Segredos | Variáveis de ambiente; `salt_campanha` e `salt_cpf_tenant` em coluna cifrada sob KEK externa — nunca no ambiente da aplicação |
+| Derivado de CPF | Argon2id (`m=64MiB, t=3, p=1`) com salt por tenant (índice) e por campanha (leaf), nunca o mesmo salt nos dois |
 | Transporte | TLS 1.3 obrigatório, HSTS |
 | Cabeçalhos | CSP, X-Frame-Options, X-Content-Type-Options |
 | PII em log | Redator de CPF/telefone/e-mail no logger, aplicado no transporte |
-| Direito ao esquecimento | Crypto-shredding: PII cifrada por titular; apagar a chave inutiliza o dado sem quebrar o hash chain da auditoria |
-| Retenção | Snapshot público retém apenas número + leaf hash + timestamp |
+| Direito ao esquecimento (comprador) | Crypto-shredding: PII cifrada por titular; apagar a chave inutiliza o dado sem quebrar o hash chain da auditoria |
+| Eliminação (operador) | Base contratual, não consentimento: desligamento revoga acesso, anonimização in-place ao fim do prazo legal. Nunca `DELETE` — as FKs sustentam o ADR-16 |
+| Retenção | Snapshot público retém apenas número + leaf hash + timestamp; `ip`/`user_agent` de sessão expurgados em D+90 por worker diário |
 | Consentimento | Versão do termo, timestamp e IP gravados na aceitação |
 
 O crypto-shredding é o que permite atender exclusão de dados sem destruir a trilha de auditoria — apagar linha de tabela append-only quebraria a cadeia de hash e invalidaria todo o produto.
@@ -922,19 +996,107 @@ O crypto-shredding só funciona se **todo** local que guarda PII estiver coberto
 
 | Local | Conteúdo | Sob a chave do titular? | O que resta após apagar a chave |
 |---|---|---|---|
-| `comprador` | nome, CPF, nascimento, telefone, e-mail | ✅ cifrado | Registro ilegível; `id` e FKs intactos |
-| `comprador.cpf_hash` | HMAC do CPF (chave global, não do titular) | ⚠️ derivado | Mantido: é o que sustenta o limite por CPF e a consulta. Não reversível sem a chave global |
+| `comprador` | nome, CPF, nascimento, telefone, e-mail | ✅ cifrado sob a DEK do titular | Registro ilegível; `id` e FKs intactos |
+| `comprador.chave_dek_cifrada` | a própria chave do titular | — é o alvo | Apagada. É a operação de shredding, não um efeito dela |
+| `comprador.cpf_indice` | Argon2id(CPF, salt por tenant) | ❌ pseudônimo, fora da chave do titular | Mantido por necessidade: sustenta o limite por CPF e a consulta do comprador. Custo de derivação torna a enumeração dos ~10⁹ CPFs válidos inviável mesmo com o salt vazado (ver abaixo) |
 | `pedido` | nenhuma PII direta | — | Intacto (valores, status, timestamps) |
 | `entrega_premio.ganhador_cifrado` | identificação do ganhador | ✅ cifrado | Ilegível; `numero_apurado`, datas e status **preservados** |
 | `entrega_premio.confirmado_ip_cifrado` | IP do aceite | ✅ cifrado junto | Ilegível |
 | `entrega_premio.comprovante_uri` | documento/foto | ✅ objeto cifrado | Objeto inacessível; a URI permanece como referência morta |
 | `auditoria.dados` | payload das transições | ✅ campos PII cifrados | Hash chain **intacto** — é o ponto central |
-| `snapshot.ndjson` | número + leaf + timestamp | ❌ não contém PII | Intacto por design; o leaf usa `HMAC(cpf, salt_campanha)`, irreversível |
+| `snapshot.ndjson` | número + leaf + timestamp | ❌ não contém PII | Intacto por design; o leaf usa `Argon2id(cpf, salt_campanha)` e o salt nunca é publicado (ver abaixo) |
 | `webhook_evento.payload` | payload bruto do PSP (pode conter nome/CPF) | ✅ cifrado na gravação | Ilegível; a idempotência usa `(provedor, evento_id)`, que não é PII |
-| `operador` | e-mail, nome, hash de senha, segredo TOTP | ⚠️ chave da organização, não do titular-comprador | Operador não é titular-comprador; exclusão dele segue o contrato, não o direito ao esquecimento do art. 18 |
-| `sessao` | IP e user-agent do operador | ⚠️ retenção curta | Expurgado por retenção, não por shredding |
+| `operador` | e-mail, nome, hash de senha, segredo TOTP | ❌ fora do shredding — **anonimização in-place** | Linha preservada (`id`, `tenant_id`, FKs); `email`/`nome` substituídos por marcador, `senha_hash`/`totp_secret_cifrado` zerados. Auditoria continua atribuindo o ato a um sujeito estável |
+| `sessao` | IP e user-agent do operador | ❌ fora do shredding — **expurgo por prazo** | `ip` e `user_agent` viram `NULL` em D+90; `id`, `operador_id` e as datas permanecem, sustentando o histórico de acesso sem o rastro de localização |
 | `extracao_tentativa` | sem PII de comprador | ❌ | Intacto — é registro de auditoria operacional |
 | Logs | redator de PII no transporte | ❌ nunca grava PII | Nada a apagar |
+
+#### O derivado do CPF é o furo mais provável — e HMAC não o fecha
+
+`cpf_indice` é o único campo que **precisa** sobreviver ao shredding: sem ele não há limite por
+CPF (o comprador excluído voltaria a comprar sem teto) nem consulta "meus números". Ele é, por
+construção, um pseudônimo — dado pessoal pseudonimizado segue sendo dado pessoal (art. 12, §2º),
+então a proteção precisa vir da matemática, não do rótulo.
+
+A v1.x dizia "HMAC do CPF, não reversível sem a chave global". Isso é meia-verdade, e a metade
+falsa é a que importa:
+
+| Premissa da v1.x | O que é de fato |
+|---|---|
+| "10¹¹ CPFs possíveis" | ~10⁹. Os dois dígitos verificadores são determinísticos — o espaço real é o dos 9 primeiros dígitos |
+| "não reversível sem a chave" | Correto, e irrelevante. Quem obtém o dump obtém a chave: ambos vivem no mesmo ambiente. O modelo de ameaça é *vazamento conjunto* |
+| "HMAC basta" | HMAC-SHA256 é projetado para ser **rápido**. ~10⁹ candidatos numa GPU comum é trabalho de minutos. O CPF inteiro da base é recuperado |
+| Chave **global** | Um único comprometimento expõe todos os tenants e todas as campanhas, e nenhum shredding individual reduz o dano |
+
+Três mudanças, cada uma fechando uma das linhas:
+
+1. **Argon2id no lugar de HMAC** (`m=64MiB, t=3, p=1`). O custo deixa de ser desprezível: a mesma
+   enumeração passa de minutos para escala inviável, porque cada tentativa custa 64 MiB de memória.
+   O preço é real e aceito — ~50ms por derivação, no checkout e na consulta, ambos já com rate
+   limit. Não está em caminho quente de alocação.
+2. **Salt por tenant, não global.** Vazamento fica contido no tenant, e o custo de ataque não é
+   amortizável entre bases — quem quebra um tenant recomeça do zero no próximo.
+3. **Salt em coluna cifrada sob a mesma KEK externa** do `salt_campanha`, nunca em variável de
+   ambiente da aplicação. Dump do Postgres sozinho não carrega o salt.
+
+**O que isto não resolve, e é honesto declarar:** contra um alvo *específico* — "o CPF 123… está
+nesta base?" — nenhuma derivação protege. Uma única verificação custa 50ms. A defesa é contra
+recuperação **em massa**, que é o cenário de vazamento real; confirmação pontual de um CPF já
+conhecido continua possível e é risco aceito.
+
+**Coerência com o leaf do snapshot (§6).** O leaf usa a mesma primitiva com `salt_campanha` —
+por campanha, escopo ainda menor. São dois salts distintos de propósito distinto: `cpf_indice`
+vive no banco e serve à operação; o leaf é **publicado** e serve à verificação pública. Nunca
+compartilham salt: reusar permitiria cruzar o snapshot público com a base e reidentificar
+compradores por interseção.
+
+#### Dado do operador: outro titular, outro regime
+
+As duas linhas acima são as únicas do inventário que **não** entram no crypto-shredding, e a
+razão não é que deixaram de ser dado pessoal — é que o titular é outro e a base legal é outra.
+O operador é titular pela LGPD tanto quanto o comprador; o que muda é que o tratamento se apoia
+em **execução de contrato** (art. 7º, V), não em consentimento. Consequência prática: ele não
+pode revogar o tratamento a pedido enquanto o contrato vigora (art. 18, §2º) — o que ele tem é
+o direito à **eliminação ao término do tratamento** (art. 16). Prazo e gatilho, não botão.
+
+Colocá-lo sob a chave do titular-comprador seria pior que inútil: um comprador exercendo o
+esquecimento apagaria as credenciais do operador da campanha.
+
+E há um conflito que o shredding não resolveria de forma alguma. `auditoria.operador_id` e
+`extracao_tentativa.operador_id` são FK: se apagar o operador significasse `DELETE`, sumiria
+**quem autorizou a entrada manual da extração** — exatamente o controle que o ADR-16 exige
+(dois responsáveis distintos). Um controle antifraude que se apaga a pedido do fraudador não é
+controle. Daí o desenho em dois tempos:
+
+| Momento | Gatilho | O que acontece | O que sobrevive |
+|---|---|---|---|
+| **Desligamento** | Operador sai da organização | `desativado_em` preenchido; todas as `sessao` revogadas na mesma transação; login rejeitado | Tudo. É revogação de acesso, não eliminação de dado |
+| **Anonimização** | 5 anos após o desligamento (prescrição do art. 206 CC para pretensão civil), ou antes se nenhuma campanha do tenant estiver sob prazo legal | `email` → `anon+<id>@invalido.local`, `nome` → `Operador removido`, `senha_hash` → string vazia, `totp_secret_cifrado` → `NULL`, `anonimizado_em` carimbado | `id`, `tenant_id`, `criado_em` e **todas as FKs**. A auditoria segue dizendo *que ato foi de qual sujeito*, sem dizer *quem é a pessoa* |
+
+A anonimização é `UPDATE`, nunca `DELETE`, e é a razão do `CHECK (anonimizado_em IS NULL OR
+desativado_em IS NOT NULL)`: não existe caminho que anonimize alguém que ainda pode fazer login.
+Ela também é registrada em `auditoria` como qualquer outra transição — o ato de eliminar é ele
+próprio auditável, senão vira a porta dos fundos que o resto do capítulo fecha.
+
+**Sessão.** `ip` e `user_agent` são dado pessoal do operador e não têm base contratual para
+persistir indefinidamente: existem para investigar acesso indevido. Noventa dias cobrem a janela
+realista de detecção e mantêm a tabela longe de virar histórico de localização. O worker de
+expurgo roda no mesmo BullMQ do worker de expiração, uma vez por dia:
+
+```sql
+UPDATE sessao
+   SET ip = NULL, user_agent = NULL, purgada_em = now()
+ WHERE purgada_em IS NULL AND purgar_em <= now();
+```
+
+A linha permanece: `operador_id`, `criada_em`, `segundo_fator_em` e `revogada_em` continuam
+respondendo *quando* e *se com 2º fator* houve acesso — que é o valor de auditoria — sem o
+*de onde*. `comprador_sessao` tem os mesmos campos e entra no mesmo expurgo; a PII do comprador
+sob a chave dele é o que o shredding cobre, o IP da sessão dele não é.
+
+**Onde isso pode dar errado:** o expurgo que não roda é indistinguível do expurgo que roda, até
+alguém olhar. Por isso a métrica `sessoes_pendentes_expurgo_gauge` (§10) e o alerta quando ela
+passa de zero por mais de 48h — política de retenção sem monitor é declaração de intenção.
 
 **A invariante que precisa ser provada, não assumida:** apagar a chave de um titular deixa `auditoria` **verificável de ponta a ponta**. Isso é possível porque a cadeia encadeia o *hash do registro*, e o registro cifrado não muda quando a chave some — some a capacidade de **ler**, não o **byte**. Se o hash fosse calculado sobre o texto claro, o shredding quebraria a cadeia.
 
@@ -947,6 +1109,10 @@ O crypto-shredding só funciona se **todo** local que guarda PII estiver coberto
 5. Recomputar a raiz Merkle do snapshot → deve bater com a raiz carimbada.
 6. Confirmar que nenhum campo do titular é legível em nenhuma das tabelas do inventário.
 7. Confirmar que `entrega_premio` mantém `numero_apurado` e o status público legíveis — a prova de entrega sobrevive à exclusão do dado pessoal.
+8. **Anonimizar um operador** que autorizou entrada manual da extração → `extracao_tentativa.operador_id` continua resolvendo, a cadeia de auditoria continua validando, e nenhum campo identificável dele sobrevive em qualquer tabela.
+9. **Antecipar o relógio em 91 dias** e rodar o worker de expurgo → `ip` e `user_agent` de `sessao` e `comprador_sessao` estão `NULL`, `segundo_fator_em` e `revogada_em` intactos.
+10. **Após o shredding, o limite por CPF continua valendo**: novo pedido com o CPF do titular excluído é recusado por `LIMITE_CPF_EXCEDIDO`, provando que `cpf_indice` sobreviveu e ainda casa.
+11. **Salts não colidem**: `Argon2id(cpf, salt_cpf_tenant) != Argon2id(cpf, salt_campanha)` para o mesmo CPF — o teste falha se alguém unificar os salts numa refatoração.
 
 O passo 7 é o que concilia LGPD com R8.5: o titular exerce o direito ao esquecimento **sem** apagar a prova de que o prêmio foi entregue. O que era público (número, data, status) continua público; o que era pessoal (quem) fica ilegível.
 
@@ -955,7 +1121,7 @@ O passo 7 é o que concilia LGPD com R8.5: o titular exerce o direito ao esqueci
 ## 10. Observabilidade
 
 - **Logs** estruturados JSON com `correlation_id` propagado do request ao worker
-- **Métricas** (Prometheus): `pedidos_criados_total`, `pedidos_pagos_total`, `numeros_alocados_duration_seconds`, `webhook_processamento_duration_seconds`, `estoque_disponivel_gauge`
+- **Métricas** (Prometheus): `pedidos_criados_total`, `pedidos_pagos_total`, `numeros_alocados_duration_seconds`, `webhook_processamento_duration_seconds`, `estoque_disponivel_gauge`, `sessoes_pendentes_expurgo_gauge`
 - **Tracing** OpenTelemetry no caminho checkout → PSP → webhook → atribuição
 - **Health checks**: `/health/live`, `/health/ready` (Postgres, Redis, PSP)
 
@@ -967,6 +1133,7 @@ O passo 7 é o que concilia LGPD com R8.5: o titular exerce o direito ao esqueci
 | Falha ao carimbar commitment | Crítica |
 | Fonte da Federal indisponível em dia de apuração | Crítica |
 | Autorização da campanha vence em < 7 dias | Média |
+| `sessoes_pendentes_expurgo_gauge` > 0 por mais de 48h | Média |
 
 ---
 
@@ -1046,6 +1213,8 @@ Não é opcional. Rodam em CI a cada PR:
 | ADR-18 | `ESTORNO_PENDENTE` como estado de primeira classe | Retry silencioso até conseguir | Consequência direta da ADR-17: sem custódia o estorno falha de verdade. Estado explícito força o produto a tratar o pior incidente possível — dinheiro recebido, número não entregue — em vez de escondê-lo em log |
 | **ADR-20** | **App Expo/RN como superfície primária; web reduzida a página pública + admin** | PWA mobile-first sobre o Next.js | O público compra por celular e volta pelo link. PWA custaria menos, mas empurra push, ícone na home e sessão longa para o terreno mais frágil do iOS. **Custo assumido: +1 semana e a fila da loja** — ver §13 |
 | **ADR-21** | **PicPay como PSP único do MVP** | Asaas/Celcoin (adapters da spec anterior) | Decisão do operador. A porta `GatewayDePagamento` já existia, então a troca custou o adapter, não a arquitetura — a prova de que a porta valeu o preço |
+| **ADR-22** | **Derivado de CPF é Argon2id com salt por escopo** | HMAC-SHA256 com chave global (v1.x) | O espaço real de CPFs é ~10⁹ (dígitos verificadores são determinísticos) e HMAC é rápido por projeto: dump + chave no mesmo ambiente devolve a base inteira em minutos de GPU. Argon2id troca ~50ms por derivação — fora de caminho quente — por inviabilidade de enumeração em massa. Salt por tenant no índice e por campanha no leaf contém o raio de dano e impede cruzar o snapshot público com a base |
+| **ADR-23** | **Operador se anonimiza, não se apaga** | `DELETE` na linha do operador | `auditoria.operador_id` e `extracao_tentativa.operador_id` são FK: apagar destruiria a atribuição de quem autorizou a entrada manual da extração — o controle do ADR-16. Um antifraude que o fraudador apaga a pedido não é controle |
 | **ADR-22** | **Confirmação de pagamento reconsulta o PSP; o corpo do webhook não é fonte de verdade** | Confiar no payload autenticado pelo token | O webhook do PicPay é autenticado por token estático, **não assinado**: prova o chamador, não a integridade do corpo. Sem a reconsulta, um corpo forjado vira número entregue sem dinheiro |
 | **ADR-23** | **Node 24 LTS + TypeScript 5.9** | Node 22 (spec anterior) / TypeScript 7.x | 22 saiu de Active LTS. TS 7 é `latest` mas o ecossistema de decorators do NestJS e o Metro do RN ainda não seguiram; risco de terceiro no caminho crítico sem ganho de produto |
 | **ADR-24** | **SQL parametrizado + migrations `.sql`, sem ORM** | Prisma | `SKIP LOCKED`, `COPY` de 1M linhas e hash chain são SQL de qualquer forma. Além disso a `latest` do Prisma hoje é RC — dependência instável no núcleo de valor |
