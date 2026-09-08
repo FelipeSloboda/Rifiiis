@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Provisionamento do operador</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:var(--app-bg);min-height:100vh}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+[hidden]{display:none!important} /* vence display:flex dos banners/cards */
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.shell{min-height:100vh;display:grid;place-items:center;padding:34px 20px}
+.box{width:100%;max-width:460px}
+.brand{display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+.tag{text-align:center;font-size:14px;font-weight:800;color:var(--amarelo);letter-spacing:-.2px;margin-bottom:24px;text-shadow:0 2px 0 rgba(0,0,0,.22)}
+
+.card{background:linear-gradient(165deg,var(--card-laranja),var(--card-laranja-2));
+  border:3px solid var(--borda-dura);border-radius:22px;padding:26px;
+  box-shadow:0 6px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.5)}
+h1{font-size:21px;font-weight:900;letter-spacing:-.4px;margin-bottom:4px;color:var(--texto-card)}
+.lead{font-size:13.5px;color:var(--texto-card);font-weight:500;margin-bottom:20px}
+
+/* trilha de 3 passos — R0.5: convite -> senha -> 2FA (R0) */
+.steps{display:flex;align-items:center;gap:6px;margin-bottom:20px}
+.steps .s{flex:1;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;
+  text-align:center;padding:7px 4px;border:2px solid var(--borda-dura);border-radius:99px;
+  background:rgba(255,255,255,.45);color:rgba(13,51,36,.6)}
+.steps .s.on{background:#fff;color:var(--texto-card)}
+.steps .s.done{background:var(--verify);color:#fff;border-color:var(--borda-dura)}
+
+.field{margin-bottom:15px}
+.field label{display:block;font-size:12.5px;font-weight:800;color:var(--texto-card);margin-bottom:6px}
+.field input{width:100%;border:2px solid var(--borda-dura);border-radius:99px;padding:13px 16px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+.field input:focus{border-color:var(--brand-2)}
+.field input::placeholder{color:#a9b3c0}
+.field input[readonly]{background:#f3f5f8;color:var(--ink-2)}
+.field.err input{border-color:var(--danger);background:#fffbfb}
+.hint{font-size:11.5px;color:var(--texto-card);font-weight:600;margin-top:5px;line-height:1.5}
+.err-msg{font-size:12.5px;color:var(--danger);background:var(--danger-bg);border:2px solid var(--danger);
+  border-radius:12px;padding:9px 12px;margin-top:8px;display:flex;gap:6px;align-items:flex-start;font-weight:600}
+
+.btn{width:100%;background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:14px;
+  font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;
+  display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--borda-dura)}
+.btn.ghost{background:#fff;color:var(--texto-card);margin-top:10px}
+.btn[aria-disabled=true]{background:#c9b8aa;color:#6b6259;box-shadow:0 4px 0 #8d8378;border-color:#8d8378;pointer-events:none}
+
+/* força da senha — R0.5: "define a senha" */
+.meter{display:flex;gap:5px;margin:8px 0 4px}
+.meter i{flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.55);border:1.5px solid var(--borda-dura)}
+.meter i.f{background:var(--verify)}
+.meter i.w{background:var(--warn)}
+.rules{list-style:none;font-size:11.5px;color:var(--texto-card);font-weight:600;line-height:1.85;margin-top:6px}
+.rules li::before{content:"○ ";font-weight:900}
+.rules li.ok::before{content:"● ";color:var(--verify)}
+
+/* verde = prova/segurança, nunca decorativo (ver _tokens.css) */
+.mandatory{background:var(--verify-bg);border:1px solid #bce0cd;border-left:4px solid var(--verify);
+  border-radius:14px;padding:13px 15px;font-size:12.5px;color:#1c5540;line-height:1.55;margin-bottom:18px;display:flex;gap:9px}
+.mandatory b{display:block;margin-bottom:2px}
+.alerta{background:var(--warn-bg);border:2px solid #eadcb8;border-radius:14px;
+  padding:12px 14px;font-size:12.5px;color:#6d4d08;line-height:1.55;margin-bottom:18px;display:flex;gap:9px}
+.alerta b{display:block}
+.recusa{background:var(--danger-bg);border:2px solid var(--danger);border-radius:14px;
+  padding:13px 15px;font-size:12.5px;color:#7d1a21;line-height:1.55;margin-bottom:18px;display:flex;gap:9px}
+.recusa b{display:block;margin-bottom:2px}
+
+/* dados do organizador registrados no provisionamento — R0.5 */
+.org{background:#fff;border:2px solid var(--borda-dura);border-radius:16px;padding:14px 15px;margin-bottom:18px}
+.org h2{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:800;margin-bottom:9px}
+.org dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12.5px}
+.org dt{color:var(--muted);font-weight:600}
+.org dd{font-weight:700;text-align:right}
+.org dd.mono{font-family:var(--mono);font-size:12px}
+
+.audit{font-size:11.5px;color:var(--texto-card);font-weight:600;text-align:center;margin-top:16px;padding-top:14px;border-top:2px dashed rgba(15,47,99,.5);line-height:1.55}
+.foot{text-align:center;font-size:11.5px;color:#b9cde8;margin-top:20px;line-height:1.7}
+.foot a{color:var(--amarelo);font-weight:700}
+.state-nav{text-align:center;font-size:11.5px;color:#c3d5f0;margin-top:22px;line-height:1.9}
+.state-nav a{color:var(--amarelo);font-weight:700}
+.state-nav b{color:#fff;display:block;margin-bottom:2px}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="box">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <p class="tag">Provisionamento da conta &middot; R0.5</p>
+
+    <!-- ============ ESTADO 2: definir a senha (padrão) ============ -->
+    <section class="card" id="e2">
+      <div class="steps">
+        <span class="s done">1 · Convite</span>
+        <span class="s on">2 · Senha</span>
+        <span class="s">3 · 2FA</span>
+      </div>
+
+      <h1>Defina sua senha</h1>
+      <p class="lead">Você está ativando o acesso de <b>Serra Verde Promoções</b>.</p>
+
+      <div class="org">
+        <h2>Organizador registrado no provisionamento</h2>
+        <dl>
+          <dt>Razão social</dt><dd>Serra Verde Promoções ME</dd>
+          <dt>CNPJ</dt><dd class="mono">41.882.507/0001-64</dd>
+          <dt>Contato</dt><dd>operador@serraverde.com.br</dd>
+        </dl>
+      </div>
+
+      <div class="field">
+        <label for="pw">Nova senha</label>
+        <input id="pw" type="password" autocomplete="new-password" value="..............."
+               aria-describedby="pw-regras">
+        <div class="meter" role="img" aria-label="Força da senha: forte">
+          <i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i>
+        </div>
+        <ul class="rules" id="pw-regras">
+          <li class="ok">Mínimo de 12 caracteres</li>
+          <li class="ok">Letras, números e símbolo</li>
+          <li class="ok">Não é uma senha vazada conhecida</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <label for="pw2">Repita a senha</label>
+        <input id="pw2" type="password" autocomplete="new-password" value="...............">
+      </div>
+
+      <div class="mandatory">
+        <span aria-hidden="true">🛡️</span>
+        <span><b>Na próxima tela você ativa o segundo fator.</b>
+          Ele é obrigatório e não pode ser desativado depois — sua conta
+          controla campanhas e o dinheiro dos compradores.</span>
+      </div>
+
+      <a class="btn" href="00-login.html">Salvar e ativar o 2FA</a>
+
+      <p class="audit">
+        🔒 O convite é de uso único. Ao salvar, este link deixa de funcionar
+        e a ativação entra na trilha de auditoria com horário e origem.
+      </p>
+    </section>
+
+    <p class="state-nav">
+      <b>Estados desta tela no protótipo</b>
+      <a href="#" onclick="mostra(0);return false">1 · convite recebido</a> ·
+      <a href="#" onclick="mostra(1);return false">2 · definir senha</a> ·
+      <a href="#" onclick="mostra(2);return false">3 · convite expirado</a> ·
+      <a href="#" onclick="mostra(3);return false">4 · sem auto-cadastro</a>
+    </p>
+
+    <!-- ============ ESTADO 1: convite recebido ============ -->
+    <section class="card" id="e1" hidden>
+      <div class="steps">
+        <span class="s on">1 · Convite</span>
+        <span class="s">2 · Senha</span>
+        <span class="s">3 · 2FA</span>
+      </div>
+
+      <h1>Convite para operar</h1>
+      <p class="lead">A bit4devs provisionou a conta do seu organizador.</p>
+
+      <div class="org">
+        <h2>Convite emitido para</h2>
+        <dl>
+          <dt>Razão social</dt><dd>Serra Verde Promoções ME</dd>
+          <dt>CNPJ</dt><dd class="mono">41.882.507/0001-64</dd>
+          <dt>E-mail</dt><dd>operador@serraverde.com.br</dd>
+          <dt>Válido até</dt><dd>08/09/2026, 19h42</dd>
+        </dl>
+      </div>
+
+      <div class="alerta">
+        <span aria-hidden="true">⏳</span>
+        <span><b>Este convite vale por 24 horas.</b>
+          Depois disso ele precisa ser reemitido pela bit4devs — e o link antigo
+          para de funcionar no mesmo instante.</span>
+      </div>
+
+      <a class="btn" href="#" onclick="mostra(1);return false">Aceitar e definir a senha</a>
+
+      <p class="audit">
+        🔒 Não há auto-cadastro público no Rifiiis. Toda conta de operador
+        nasce de um convite nominal, com CNPJ conferido no setup.
+      </p>
+    </section>
+
+    <!-- ============ ESTADO 3: convite expirado ============ -->
+    <section class="card" id="e3" hidden>
+      <div class="steps">
+        <span class="s on">1 · Convite</span>
+        <span class="s">2 · Senha</span>
+        <span class="s">3 · 2FA</span>
+      </div>
+
+      <h1>Este convite expirou</h1>
+      <p class="lead">O prazo de 24 horas terminou em <b>07/09/2026, 19h42</b>.</p>
+
+      <div class="recusa">
+        <span aria-hidden="true">⚠️</span>
+        <span><b>O link não pode mais ser usado.</b>
+          Isso não é um erro: o prazo curto existe para que um convite
+          esquecido numa caixa de e-mail não vire porta de entrada.</span>
+      </div>
+
+      <p class="lead" style="margin-bottom:14px">
+        Peça a reemissão para quem provisionou sua conta. Você receberá um
+        <b>novo link</b> no mesmo e-mail — e este aqui continuará inválido.
+      </p>
+
+      <a class="btn" href="mailto:setup@bit4devs.com.br?subject=Reemitir%20convite%20Rifiiis">
+        Solicitar novo convite
+      </a>
+      <a class="btn ghost" href="00-login.html">Já tenho conta ativa</a>
+
+      <p class="audit">
+        🔒 A reemissão invalida qualquer convite anterior. Só o último link
+        emitido funciona, e cada tentativa de uso fica registrada.
+      </p>
+    </section>
+
+    <!-- ============ ESTADO 4: tentativa de auto-cadastro ============ -->
+    <section class="card" id="e4" hidden>
+      <h1>Não há cadastro público</h1>
+      <p class="lead">O Rifiiis não abre criação de conta de operador pela web.</p>
+
+      <div class="recusa">
+        <span aria-hidden="true">🚫</span>
+        <span><b>Conta de operador é provisionada pela bit4devs.</b>
+          Quem opera uma campanha responde por autorização regulatória,
+          conta de recebimento e dinheiro de terceiros — isso é conferido
+          por pessoas no setup, não por um formulário.</span>
+      </div>
+
+      <p class="lead" style="margin-bottom:14px">
+        Se você quer usar a plataforma para a sua campanha, fale com a gente:
+        o setup leva minutos e inclui a conferência do seu CNPJ e da autorização.
+      </p>
+
+      <a class="btn" href="mailto:comercial@bit4devs.com.br?subject=Quero%20usar%20o%20Rifiiis">
+        Falar com o comercial
+      </a>
+      <a class="btn ghost" href="01-campanha.html">Sou comprador, ver campanha</a>
+
+      <p class="audit">
+        🔒 Abrir cadastro público criaria superfície de abuso num produto
+        que ainda não tem antifraude de operador. É recusa por desenho (R15).
+      </p>
+    </section>
+
+    <p class="foot">
+      Rifiiis · Plataforma de rifa com apuração verificável<br>
+      <a href="index.html">Voltar ao índice de telas</a>
+    </p>
+  </div>
+</div>
+
+<script>
+/* Alternador de estados do protótipo — não é comportamento de produto. */
+function mostra(i){
+  ['e1','e2','e3','e4'].forEach(function(id,n){
+    document.getElementById(id).hidden = (n !== i);
+  });
+  window.scrollTo(0,0);
+}
+</script>
+
+</body>
+</html>

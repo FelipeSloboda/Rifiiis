@@ -453,9 +453,9 @@ Esta seção existe porque a v1.2 não a tinha, e foi exatamente aí que o burac
 | Req | Tela do protótipo | Situação |
 |---|---|---|
 | R0 · acesso do operador | `00-login` | ✅ 3 estados |
-| R0.5 · provisionamento | — | ⚠️ **falta protótipo** (convite, definir senha) |
-| R1 · publicar campanha | — | ⚠️ **falta protótipo** (admin de campanha) |
-| R10 · conta de recebimento | — | ⚠️ **falta protótipo** (cadastro e verificação) |
+| R0.5 · provisionamento | `00a-provisionamento` | ✅ 4 estados |
+| R1 · publicar campanha | `01a-campanha-admin` | ✅ 3 estados (portão, gerando, publicada) |
+| R10 · conta de recebimento | `10-conta-recebimento` | ✅ 3 estados + estornos pendentes |
 | R2 · alocação atômica | sem tela (backend) | ✅ n/a |
 | R3 · checkout Pix | `02-checkout-pix` | ✅ |
 | R4 · commitment | `04-apuracao` | ✅ |
@@ -466,10 +466,10 @@ Esta seção existe porque a v1.2 não a tinha, e foi exatamente aí que o burac
 | R8 · compliance | `01-campanha` (18+, autorização, limite CPF) | ✅ |
 | R8.5 · entrega do prêmio | `04-apuracao` | ✅ visão pública; falta a do operador |
 | R9.1 · visão geral | `06-painel-operador` | ✅ |
-| R9.2 · pedidos | `06-painel-operador` (listagem) | ⚠️ falta detalhe e busca |
+| R9.2 · pedidos | `06-painel-operador` (resumo) + `08-pedidos-admin` | ✅ busca, filtro e detalhe |
 | R9.3 · apurações | `07-apuracoes-admin` | ✅ |
-| R9.4 · relatórios | — | ⚠️ **falta protótipo** |
-| R9.6 · estados de exceção | — | ⚠️ **falta protótipo** |
+| R9.4 · relatórios | `09-relatorios` | ✅ com dados + período vazio |
+| R9.6 · estados de exceção | `11-estados-excecao` | ✅ 6 cenários |
 
 **Regra:** nenhuma tela entra no protótipo sem requisito correspondente, e nenhum requisito P0 com interface vai para desenvolvimento sem tela. Divergência aqui é defeito de planejamento, não detalhe de design — foi assim que a área administrativa quase entrou em desenvolvimento sem especificação.
 

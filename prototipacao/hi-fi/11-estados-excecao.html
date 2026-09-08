@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Estados de exceção (público)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --radius:14px;--shadow:0 16px 36px -24px rgba(20,36,58,.5);
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--paper);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:96px}
+:where(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+[hidden]{display:none!important} /* vence display:flex dos banners/cards */
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.topbar{background:var(--app-bg-dark);color:#fff;padding:11px 0;font-size:13px}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.topbar a{color:#c3d5f0;text-decoration:none;font-weight:600}
+.topbar a:hover{color:#fff;text-decoration:underline}
+/* aviso 18+ — R8, obrigatório em toda página pública */
+.age-strip{background:var(--app-bg-dark);color:var(--amarelo);border-bottom:1px solid rgba(255,255,255,.12);
+  font-size:12.5px;font-weight:800;padding:7px 0;text-align:center;letter-spacing:.2px}
+
+.page{max-width:760px;margin:0 auto;padding:24px 20px 50px}
+
+/* seletor de cenário — só do protótipo */
+.picker{background:var(--app-bg-dark);border:3px solid var(--borda-dura);border-radius:16px;padding:14px 16px;margin-bottom:22px}
+.picker b{display:block;font-size:12px;color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
+.picker .op{display:flex;gap:7px;flex-wrap:wrap}
+.picker button{font-size:12px;font-weight:800;padding:7px 12px;border-radius:99px;border:2px solid var(--borda-dura);
+  background:#fff;color:var(--ink-2);cursor:pointer;font-family:inherit}
+.picker button.on{background:var(--acao);color:#fff}
+
+/* card de estado — a moldura comum dos 6 cenários */
+.st{background:var(--card);border:3px solid var(--borda-dura);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);margin-bottom:18px}
+.st .bar{padding:13px 18px;font-size:13px;font-weight:900;color:#fff;display:flex;align-items:center;gap:9px;
+  border-bottom:3px solid var(--borda-dura);text-transform:uppercase;letter-spacing:.5px}
+.st .bar.grave{background:var(--danger)}
+.st .bar.espera{background:var(--warn)}
+.st .bar.prova{background:var(--verify)}
+.st .body{padding:20px}
+.st h1{font-size:21px;font-weight:900;letter-spacing:-.5px;line-height:1.28;margin-bottom:8px}
+.st .lead{font-size:14px;color:var(--ink-2);line-height:1.6;margin-bottom:16px}
+.st .lead b{color:var(--ink)}
+
+.fatos{list-style:none;border:2px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.fatos li{display:flex;justify-content:space-between;gap:14px;padding:11px 14px;font-size:13px;border-bottom:1px solid #f4e9dc}
+.fatos li:last-child{border-bottom:0}
+.fatos li:nth-child(odd){background:#fdfcfa}
+.fatos .k{color:var(--muted);font-weight:600;flex-shrink:0}
+.fatos .v{font-weight:800;text-align:right;word-break:break-word}
+.fatos .v.mono{font-family:var(--mono);font-size:12px;font-weight:500}
+
+/* verde = prova criptográfica, e nada mais (ver _tokens.css) */
+.prova-card{background:var(--verify-bg);border:1.5px solid #bce0cd;border-left:4px solid var(--verify);
+  border-radius:15px;padding:14px 16px;margin-bottom:16px}
+.prova-card .t{display:flex;align-items:center;gap:8px;font-weight:900;color:var(--verify);font-size:13.5px}
+.prova-card p{font-size:12.5px;color:#1c5540;margin-top:5px;line-height:1.55}
+.prova-card .h{font-family:var(--mono);font-size:11.5px;color:#1c5540;background:#fff;border:1px solid #bce0cd;
+  border-radius:9px;padding:8px 10px;margin-top:9px;word-break:break-all}
+
+.nunca{background:var(--warn-bg);border:2px solid #eadcb8;border-radius:14px;padding:13px 15px;
+  font-size:12.5px;color:#6d4d08;line-height:1.6;margin-bottom:16px}
+.nunca b{display:block;margin-bottom:2px}
+.grave-box{background:var(--danger-bg);border:2px solid var(--danger);border-radius:14px;padding:13px 15px;
+  font-size:12.5px;color:#7d1a21;line-height:1.6;margin-bottom:16px}
+.grave-box b{display:block;margin-bottom:2px}
+
+/* retificação: vigente x anterior lado a lado */
+.retif{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:560px){.retif{grid-template-columns:1fr}}
+.retif .r{border:2.5px solid var(--borda-dura);border-radius:14px;padding:14px;background:#fdfcfa}
+.retif .r .l{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.retif .r .n{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:1px}
+.retif .r .d{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.retif .r.vig{border-color:var(--verify);background:var(--verify-bg)}
+.retif .r.vig .l{color:var(--verify)}
+/* resultado anterior: sem opacity — ela rebaixaria o texto abaixo de AA.
+   A revogação é dita pelo traço e pelo rótulo, não pelo apagamento. */
+.retif .r.ant{background:#f4f1ee;border-color:#8f9aa8}
+.retif .r.ant .l{color:#4e5a68}
+.retif .r.ant .n{text-decoration:line-through;color:#5e6b7c}
+.retif .r.ant .d{color:#4e5a68}
+
+.btn{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:12px 20px;
+  font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn.ghost{background:#fff;color:var(--brand)}
+.acts{display:flex;gap:9px;flex-wrap:wrap}
+
+.foot{text-align:center;font-size:11.5px;color:var(--muted);line-height:1.7;padding:0 20px}
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--app-bg-dark);
+  display:flex;justify-content:space-around;padding:8px 0 7px;border-top:3px solid var(--borda-dura);z-index:20}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a9c0e2;
+  text-decoration:none;font-size:10.5px;font-weight:700}
+.tabbar a .ic{font-size:19px;line-height:1}
+.tabbar a.on{color:var(--amarelo)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <span style="display:flex;align-items:center"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></span>
+    <a href="05-verificador.html">🔐 Verificador público</a>
+  </div>
+</header>
+<p class="age-strip">Proibido para menores de 18 anos</p>
+
+<div class="page">
+
+  <div class="picker">
+    <b>R9.6 · seis estados de exceção — escolha o cenário</b>
+    <div class="op">
+      <button type="button" class="on" onclick="ver(1,this)">1 · sem vendas</button>
+      <button type="button" onclick="ver(2,this)">2 · fonte indisponível</button>
+      <button type="button" onclick="ver(3,this)">3 · autorização vencida</button>
+      <button type="button" onclick="ver(4,this)">4 · entrega pendente</button>
+      <button type="button" onclick="ver(5,this)">5 · retificada</button>
+      <button type="button" onclick="ver(6,this)">6 · Pix após expirar</button>
+    </div>
+  </div>
+
+  <!-- ============ 1 · campanha sem nenhuma venda até o congelamento ============ -->
+  <article class="st" id="s1">
+    <p class="bar grave"><span aria-hidden="true">🚫</span> Campanha cancelada</p>
+    <div class="body">
+      <h1>Cancelada por ausência de vendas</h1>
+      <p class="lead">A campanha <b>Moto 0km — Sorteio Serra Verde</b> foi congelada
+        em 24/10/2026 sem nenhum bilhete vendido. Sem venda não há sorteio:
+        a campanha foi encerrada e <b>não haverá extração</b>.</p>
+
+      <ul class="fatos">
+        <li><span class="k">Congelada em</span><span class="v">24/10/2026, 23h59</span></li>
+        <li><span class="k">Bilhetes vendidos</span><span class="v">0</span></li>
+        <li><span class="k">Arrecadação</span><span class="v">R$ 0,00</span></li>
+        <li><span class="k">Compradores afetados</span><span class="v">nenhum</span></li>
+      </ul>
+
+      <div class="prova-card">
+        <p class="t"><span aria-hidden="true">🔐</span> Commitment da lista vazia</p>
+        <p>Mesmo sem vendas, a lista foi carimbada. A prova de que ela estava
+          vazia no congelamento é pública e verificável — é o que impede
+          inserir uma venda depois.</p>
+        <p class="h">sha256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</p>
+      </div>
+
+      <div class="acts">
+        <a class="btn ghost" href="05-verificador.html">Verificar o commitment</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ 2 · apuração pendente por fonte indisponível ============ -->
+  <article class="st" id="s2" hidden>
+    <p class="bar espera"><span aria-hidden="true">⏳</span> Apuração pendente</p>
+    <div class="body">
+      <h1>Aguardando o resultado oficial da Loteria Federal</h1>
+      <p class="lead">A extração <b>nº 5921</b> ocorreu em 25/10/2026, mas as duas
+        fontes oficiais consultadas ainda não responderam. A campanha
+        <b>segue congelada</b> e o resultado será publicado assim que a fonte
+        oficial estiver disponível.</p>
+
+      <ul class="fatos">
+        <li><span class="k">Próxima tentativa automática</span><span class="v">hoje, 20h15</span></li>
+        <li><span class="k">Tentativas já feitas</span><span class="v">4</span></li>
+        <li><span class="k">18h00 · CAIXA (API)</span><span class="v mono">502 — indisponível</span></li>
+        <li><span class="k">18h05 · Fonte secundária</span><span class="v mono">timeout 30s</span></li>
+        <li><span class="k">19h00 · CAIXA (API)</span><span class="v mono">502 — indisponível</span></li>
+        <li><span class="k">19h30 · Fonte secundária</span><span class="v mono">timeout 30s</span></li>
+      </ul>
+
+      <div class="nunca">
+        <b>O Rifiiis não produz resultado sem origem oficial.</b>
+        Nenhum número provisório, estimado ou gerado internamente será exibido
+        aqui. Tela em espera é a resposta honesta — resultado inventado seria
+        mais rápido e destruiria a única coisa que este produto vende.
+      </div>
+
+      <div class="prova-card">
+        <p class="t"><span aria-hidden="true">🔐</span> A lista já está congelada e carimbada</p>
+        <p>O commitment foi publicado <b>antes</b> da extração. A demora na fonte
+          não muda o que foi vendido: nada pode ser inserido ou removido agora.</p>
+        <p class="h">sha256 9c4e1f7a08b2d6538e0a4c19bf7d2e6a51c380947fe2ab6c1d05e8f37a92b4c6</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ 3 · campanha suspensa por autorização vencida ============ -->
+  <article class="st" id="s3" hidden>
+    <p class="bar grave"><span aria-hidden="true">⚠️</span> Venda suspensa</p>
+    <div class="body">
+      <h1>Venda suspensa: autorização vencida</h1>
+      <p class="lead">A autorização regulatória desta campanha venceu em
+        <b>31/08/2026</b> e a venda de novos bilhetes foi <b>bloqueada
+        automaticamente</b> pela plataforma.</p>
+
+      <ul class="fatos">
+        <li><span class="k">Autorização</span><span class="v mono">SPA/MF 03412/2026</span></li>
+        <li><span class="k">Venceu em</span><span class="v">31/08/2026</span></li>
+        <li><span class="k">Suspensa em</span><span class="v">01/09/2026, 00h01</span></li>
+        <li><span class="k">Bilhetes já vendidos</span><span class="v">11.850 — permanecem válidos</span></li>
+      </ul>
+
+      <div class="grave-box">
+        <b>Se você já comprou, seu número continua valendo.</b>
+        A suspensão impede vender mais, não anula o que foi vendido. A extração
+        de 25/10/2026 ocorrerá com a lista congelada — ou, se o organizador não
+        renovar, a campanha será cancelada e os pagamentos estornados.
+      </div>
+
+      <div class="acts">
+        <a class="btn" href="03a-acesso-comprador.html">Ver meus números</a>
+        <a class="btn ghost" href="05-verificador.html">Verificar a lista</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ 4 · prêmio não entregue no prazo ============ -->
+  <article class="st" id="s4" hidden>
+    <p class="bar espera"><span aria-hidden="true">📦</span> Entrega pendente</p>
+    <div class="body">
+      <h1>Prêmio ainda não entregue</h1>
+      <p class="lead">A campanha foi apurada em 25/10/2026 e o ganhador está
+        identificado, mas o organizador <b>não registrou a entrega dentro do prazo
+        de 30 dias</b> previsto no regulamento.</p>
+
+      <ul class="fatos">
+        <li><span class="k">Número sorteado</span><span class="v mono">418 227</span></li>
+        <li><span class="k">Ganhador</span><span class="v">M. A. F. &middot; CPF ***.882.***-**</span></li>
+        <li><span class="k">Prazo do regulamento</span><span class="v">até 24/11/2026</span></li>
+        <li><span class="k">Situação</span><span class="v">atrasada há 14 dias</span></li>
+        <li><span class="k">Responsável pela entrega</span><span class="v">Serra Verde Promoções ME</span></li>
+      </ul>
+
+      <div class="nunca">
+        <b>A entrega é obrigação do organizador, não da plataforma.</b>
+        O Rifiiis registra e expõe o atraso publicamente — é o que ele pode
+        fazer. Quem responde pelo prêmio e pelo prazo é quem assinou a
+        autorização, e o contato dele está no regulamento da campanha.
+      </div>
+
+      <div class="acts">
+        <a class="btn ghost" href="#">Ler o regulamento</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ 5 · apuração retificada: vigente E anterior ============ -->
+  <article class="st" id="s5" hidden>
+    <p class="bar prova"><span aria-hidden="true">🔐</span> Apuração retificada</p>
+    <div class="body">
+      <h1>Esta apuração foi retificada</h1>
+      <p class="lead">O resultado publicado em 25/10/2026 usou a extração errada
+        da Loteria Federal. A apuração foi refeita com a extração correta, e
+        <b>os dois resultados ficam visíveis aqui</b> — o anterior não é apagado.</p>
+
+      <div class="retif">
+        <div class="r vig">
+          <p class="l">✓ Resultado vigente</p>
+          <p class="n">418 227</p>
+          <p class="d">Extração nº 5921 · 25/10/2026<br>Retificado em 27/10/2026, 10h12</p>
+        </div>
+        <div class="r ant">
+          <p class="l">Resultado anterior</p>
+          <p class="n">903 514</p>
+          <p class="d">Extração nº 5920 · 18/10/2026<br>Publicado em 25/10/2026, 21h40</p>
+        </div>
+      </div>
+
+      <ul class="fatos">
+        <li><span class="k">Motivo da retificação</span><span class="v">Extração incorreta utilizada</span></li>
+        <li><span class="k">Autorizada por</span><span class="v">2 responsáveis distintos</span></li>
+        <li><span class="k">Registrado em</span><span class="v">27/10/2026, 10h12</span></li>
+      </ul>
+
+      <div class="prova-card">
+        <p class="t"><span aria-hidden="true">🔐</span> A lista de vendas não mudou</p>
+        <p>A retificação recalcula o número apurado sobre a <b>mesma lista
+          congelada</b>. O commitment é o de antes — e é por isso que a correção
+          pode ser auditada em vez de simplesmente acreditada.</p>
+        <p class="h">sha256 9c4e1f7a08b2d6538e0a4c19bf7d2e6a51c380947fe2ab6c1d05e8f37a92b4c6</p>
+      </div>
+
+      <div class="nunca">
+        <b>O que a retificação nunca pode fazer:</b>
+        alterar a lista de vendas, incluir ou remover bilhete, mudar o commitment
+        carimbado, ou escolher entre extrações até achar um resultado conveniente.
+        Ela só recalcula o número apurado a partir de uma extração oficial —
+        e deixa o resultado anterior à vista.
+      </div>
+
+      <div class="acts">
+        <a class="btn ghost" href="05-verificador.html">Reproduzir a apuração</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============ 6 · Pix pago depois da expiração da reserva ============ -->
+  <article class="st" id="s6" hidden>
+    <p class="bar espera"><span aria-hidden="true">💠</span> Pagamento fora do prazo</p>
+    <div class="body">
+      <h1>Seu Pix chegou depois da reserva expirar</h1>
+      <p class="lead">A reserva do pedido <b>#9012</b> valia 15 minutos e expirou
+        às <b>18h42</b>. Seu Pix foi recebido às <b>19h07</b>, e nesse intervalo
+        os números voltaram para o estoque.</p>
+
+      <ul class="fatos">
+        <li><span class="k">Pedido</span><span class="v mono">#9012</span></li>
+        <li><span class="k">Reserva expirou</span><span class="v">18h42</span></li>
+        <li><span class="k">Pix recebido</span><span class="v">19h07 (25 min depois)</span></li>
+        <li><span class="k">Valor</span><span class="v">R$ 45,00</span></li>
+        <li><span class="k">Havia estoque?</span><span class="v">Não — campanha esgotada</span></li>
+      </ul>
+
+      <div class="grave-box">
+        <b>Não foi possível realocar: a campanha esgotou às 18h55.</b>
+        Como não havia número disponível, seu pagamento <b>está sendo estornado</b>
+        — não ficou com o organizador nem com a plataforma.
+      </div>
+
+      <ul class="fatos">
+        <li><span class="k">Estado do estorno</span><span class="v">Em andamento</span></li>
+        <li><span class="k">Solicitado ao PicPay</span><span class="v">25/10/2026, 19h08</span></li>
+        <li><span class="k">Previsão de crédito</span><span class="v">até 2 dias úteis</span></li>
+      </ul>
+
+      <div class="nunca">
+        <b>Se o estorno atrasar, você continua vendo o estado aqui.</b>
+        Ele nunca será marcado como concluído antes de o dinheiro sair de fato.
+        Enquanto estiver pendente, esta página informa a previsão — você não
+        fica sem resposta.
+      </div>
+
+      <div class="acts">
+        <a class="btn" href="03a-acesso-comprador.html">Acompanhar meu pedido</a>
+      </div>
+    </div>
+  </article>
+
+  <p class="foot">
+    Rifiiis · Plataforma de rifa com apuração verificável<br>
+    Um produto que vende transparência não pode ficar mudo quando algo dá errado.<br>
+    <a href="index.html" style="color:var(--brand);font-weight:700">Voltar ao índice de telas</a>
+  </p>
+</div>
+
+<nav class="tabbar" aria-label="Navegação principal">
+  <a href="08-home-app.html"><span class="ic" aria-hidden="true">🏠</span>Home</a>
+  <a href="03a-acesso-comprador.html"><span class="ic" aria-hidden="true">🎫</span>Meus Bilhetes</a>
+  <a class="on" href="05-verificador.html"><span class="ic" aria-hidden="true">🔐</span>Verificar</a>
+  <a href="#"><span class="ic" aria-hidden="true">❓</span>Suporte</a>
+</nav>
+
+<script>
+/* Alternador de cenários do protótipo — não é comportamento de produto. */
+function ver(n, el){
+  for (var i = 1; i <= 6; i++){
+    document.getElementById('s' + i).hidden = (i !== n);
+  }
+  document.querySelectorAll('.picker button').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  window.scrollTo(0,0);
+}
+</script>
+
+</body>
+</html>

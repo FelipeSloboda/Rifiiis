@@ -205,6 +205,108 @@ conseguiu obter a extração. É onde a UI decide se o operador age com método 
   que é dependência de caminho crítico (PRD Q6). O operador vê o risco antes do dia.
 - **Alerta de vencimento da autorização** (R8), com os 23 dias restantes explícitos.
 
+### 00a — Provisionamento da conta (R0.5)
+- **A tela recusa auto-cadastro em voz alta**, e o estado 4 existe só para isso.
+  Quem chega pela URL sem convite não vê um formulário nem um 404: vê a razão
+  pela qual conta de operador é provisionada à mão. Sem essa tela, alguém
+  "conserta" a ausência de cadastro público na semana 3 e abre a superfície
+  de abuso que R15 recusa por desenho.
+- **Convite expirado é estado de primeira classe** (estado 3), não mensagem de erro.
+  É o caminho mais provável na prática — convite de 24 h esquecido numa caixa de
+  e-mail — e ele precisa dizer o que fazer agora, com o pedido de reemissão à mão.
+- **Os dados do organizador aparecem antes de definir a senha.** Razão social e
+  CNPJ visíveis são a única chance de o operador perceber que o convite é da
+  empresa errada antes de assumir a conta.
+- **A trilha de 3 passos mostra o 2FA como terceiro passo, não como opção.**
+  Encadear provisionamento → senha → 2FA na mesma barra torna visualmente
+  impossível a leitura de que o segundo fator vem depois, "quando der".
+
+### 01a — Campanha, admin (R1)
+- **O portão de publicação é a tela, não um alerta no rodapé.** Os quatro itens
+  ficam em lista com o motivo e o atalho para resolver. Publicação bloqueada sem
+  dizer *o quê* e *onde consertar* é o padrão que gera ticket de suporte.
+- **As duas travas são de naturezas diferentes e a tela diz isso:** autorização
+  vencida é lei (R8), conta de recebimento é dinheiro (R10). Nenhuma é
+  dispensável por decisão do operador — e a tela não oferece "publicar mesmo assim".
+- **Preço e total de números mostram o cadeado antes de travar**, não depois.
+  O aviso de imutabilidade aparece junto do campo enquanto ainda é rascunho,
+  que é o único momento em que ele serve para algo.
+- **A geração de 1M de números é assíncrona e a tela assume isso** (estado 2):
+  a campanha já está publicada, a barra informa o progresso e diz que pode
+  fechar a aba. Bloquear a tela por 41 s seria mentir sobre o que o backend faz.
+- **O upload declara que valida o conteúdo, não a extensão.** É requisito de R1
+  e também a explicação de por que um arquivo pode ser recusado.
+
+### 08a — Pedidos, admin (R9.2)
+- **O CPF vive mascarado e a busca aceita o completo.** São coisas diferentes:
+  procurar por um documento que o operador já tem em mãos é legítimo; exibir
+  1.058 CPFs numa listagem é vazamento por conveniência. A tela declara que
+  ver o número inteiro é ação registrada.
+- **O detalhe escolhido para o protótipo é o pior caso, não o caminho feliz.**
+  O pedido #8841 é o Pix pago após a expiração, sem estoque, com estorno
+  recusado por saldo — o encadeamento que R10 assumiu como consequência da
+  não-custódia. Um detalhe de pedido pago não teria mostrado nada que a
+  listagem já não diga.
+- **O histórico é uma linha do tempo com origem e horário**, não um `updated_at`.
+  Cada transição diz quem a causou — comprador, job de expiração, webhook do
+  PicPay — porque a pergunta real do operador nunca é "qual o estado", é
+  "como chegou nesse estado".
+- **A linha final não é um estado da máquina**, é a espera. `ESTORNO_PENDENTE`
+  já apareceu acima; o que o operador precisa ver embaixo é há quanto tempo
+  o comprador está esperando e quando é a próxima tentativa.
+- **Busca vazia diz que a busca funcionou.** Sem essa frase, resultado vazio é
+  lido como sistema quebrado — e o operador liga para o suporte em vez de
+  conferir o identificador.
+- **Filtro e exportação são a mesma seleção.** O CSV respeita o filtro aplicado
+  (R9.2); exportar sempre-tudo transformaria o filtro em decoração.
+
+### 10 — Conta de recebimento (R10)
+- **O diagrama do dinheiro tem a bit4devs riscada.** A não-custódia (ADR-17) é
+  decisão jurídica e comercial, mas quem lê a tela é o operador: ele precisa ver
+  que o Pix vai direto para a conta dele, sem intermediário. Texto explicando
+  não teria a mesma força que o nó tachado no fluxo.
+- **Titularidade recusada mostra o nome divergente** (estado 3). "Conta inválida"
+  não ensina nada; "esta conta é de João P. de Almeida, não do CNPJ da campanha"
+  resolve o problema em um passo.
+- **Estornos pendentes ficam nesta tela, não em Relatórios.** É aqui que está a
+  conta que precisa de saldo — e o `ESTORNO_PENDENTE` só existe porque não há
+  custódia. Consequência e causa na mesma tela.
+- **O total devido é o número em destaque, em vermelho.** O operador precisa
+  sentir que são R$ 145,00 de compradores esperando, não uma linha de tabela.
+
+### 09 — Relatórios (R9.4)
+- **Duas coisas diferentes na mesma tela, separadas visualmente:** arrecadação
+  (gerencial, exportável) e prestação de contas (documento para o órgão). Misturá-las
+  produziria um relatório que não serve para nenhum dos dois usos.
+- **O estornado aparece na mesma linha do arrecadado.** Um relatório que só soma
+  entradas mente por omissão justamente onde há dinheiro a devolver — e a nota de
+  rodapé liga os R$ 145,00 ao `ESTORNO_PENDENTE` da tela 10.
+- **O commitment entra na prestação de contas.** É o que diferencia este produto:
+  o órgão autorizador recebe a raiz Merkle carimbada, não a palavra do operador.
+- **Período vazio é estado desenhado** (R9.5), e diz explicitamente "não é erro de
+  carregamento". Tabela vazia sem essa frase é lida como falha do sistema.
+
+### 11 — Estados de exceção, público (R9.6)
+- **Esta é a tela que sustenta a tese do produto.** Um produto que vende
+  transparência não pode ficar mudo quando algo dá errado — e os seis cenários
+  são exatamente os momentos em que o silêncio viraria desconfiança.
+- **Apuração pendente nunca mostra número provisório**, e a tela declara isso
+  em texto: "o Rifiiis não produz resultado sem origem oficial". O histórico de
+  tentativas com horário e código de erro está à vista, porque a alternativa —
+  tela em branco com "aguarde" — é indistinguível de sistema quebrado.
+- **A retificação exibe o resultado anterior tachado ao lado do vigente.** Esconder
+  o resultado revogado seria tecnicamente mais simples e destruiria a auditabilidade:
+  quem viu o primeiro número precisa entender o que mudou e por quê.
+- **Os limites da retificação estão na tela pública**, não só na documentação
+  do operador. É o que impede a leitura de que "retificar" é sinônimo de
+  "escolher outro resultado".
+- **Suspensão por autorização vencida afirma que bilhete vendido continua válido.**
+  A dúvida real de quem já comprou é essa, e ela vem antes de qualquer explicação
+  sobre o motivo da suspensão.
+- **Cancelamento por ausência de vendas publica o commitment da lista vazia.**
+  É o caso em que ninguém foi lesado e a prova parece dispensável — mas é ela
+  que impede inserir uma venda retroativa numa campanha "sem movimento".
+
 ---
 
 ## 4. Acessibilidade

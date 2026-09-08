@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Campanha (admin)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+[hidden]{display:none!important} /* vence display:flex dos banners/cards */
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+@media(max-width:860px){.app{grid-template-columns:1fr}.side{display:none}}
+.side{background:var(--app-bg-dark);color:#cddaea;padding:20px 14px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh}
+.side .brand{display:flex;align-items:center;margin-bottom:22px;padding:0 5px}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;font-size:13.5px;color:#a9c0e2;text-decoration:none;transition:.15s}
+.nav:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav.on{background:rgba(232,89,12,.3);color:#fff;font-weight:800}
+.side .sp{flex:1}
+.side .me{border-top:2px solid rgba(255,255,255,.12);padding-top:14px;margin-top:8px;font-size:12.5px;display:flex;align-items:center;gap:9px}
+.side .me .av{width:31px;height:31px;border-radius:50%;background:var(--brand-2);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.side .me .sub{color:#93a6c2;font-size:11px;display:block;margin-top:1px}
+
+.main{padding:26px 30px 60px;overflow:auto}
+@media(max-width:860px){.main{padding:20px}}
+.crumb{font-size:12px;color:#d3e0f2;font-weight:600;margin-bottom:8px}
+.crumb a{color:var(--amarelo);text-decoration:none;font-weight:700}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#fff}
+.head p{color:var(--amarelo);font-size:13.5px;font-weight:700;margin-top:3px}
+.head .acts{display:flex;gap:9px;flex-wrap:wrap}
+
+.btn{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:11px 20px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--borda-dura)}
+.btn.ghost{background:#fff;color:var(--brand)}
+.btn.ghost:hover{background:var(--paper)}
+.btn[aria-disabled=true]{background:#c9b8aa;color:#6b6259;border-color:#8d8378;box-shadow:0 4px 0 #8d8378;pointer-events:none}
+
+.status{font-size:11.5px;font-weight:900;padding:5px 13px;border-radius:99px;border:2.5px solid var(--borda-dura);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 0 var(--borda-dura)}
+.status.rascunho{background:#efe4d6;color:#5c4a36}
+.status.publicada{background:var(--verify-bg);color:var(--verify)}
+
+.card{background:var(--card);border:3px solid var(--borda-dura);border-radius:20px;padding:20px;margin-bottom:18px;box-shadow:0 5px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.4)}
+.card h2{font-size:15.5px;font-weight:900;letter-spacing:-.3px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.card h2 .r{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.card .sub{font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.55}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:720px){.grid.g3{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column}
+.f.full{grid-column:1/-1}
+.f label{font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:5px}
+.f label .req{color:var(--danger)}
+.f input,.f select,.f textarea{border:2px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);width:100%}
+.f textarea{min-height:78px;resize:vertical;line-height:1.5}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--brand-2)}
+.f .hint{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.f.bad input,.f.bad select{border-color:var(--danger);background:#fffbfb}
+.f .bad-msg{font-size:12px;color:var(--danger);font-weight:700;margin-top:6px;display:flex;gap:5px;align-items:flex-start}
+.f input.mono{font-family:var(--mono)}
+
+/* R1: preço e total viram imutáveis depois de publicar */
+.f.locked input,.f.locked select{background:#f3f5f8;color:var(--ink-2);cursor:not-allowed;border-style:dashed}
+.lockbadge{font-size:10.5px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:inline-flex;gap:4px;align-items:center;margin-left:auto}
+
+.banner{display:flex;gap:12px;border:3px solid var(--borda-dura);border-radius:16px;padding:14px 16px;margin-bottom:18px;font-size:13.5px;align-items:flex-start;box-shadow:0 4px 0 var(--borda-dura)}
+.banner b:first-child{display:block} /* só o título; <b> no meio da frase segue inline */
+.banner.stop{background:var(--danger-bg);color:#7d1a21}
+.banner.warn{background:var(--warn-bg);color:#6d4d08}
+.banner.ok{background:var(--verify-bg);color:#1c5540}
+.banner .act{margin-left:auto;flex-shrink:0}
+
+/* checklist de publicação — R1 + R10 + R8 */
+.gate{list-style:none;display:flex;flex-direction:column;gap:9px}
+.gate li{display:flex;gap:11px;align-items:flex-start;font-size:13px;padding:11px 13px;border:2px solid var(--line);border-radius:14px;background:#fdfcfa}
+.gate li .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0;border:2px solid var(--borda-dura);margin-top:1px}
+.gate li.ok{border-color:#bce0cd;background:var(--verify-bg)}
+.gate li.ok .ic{background:var(--verify);color:#fff}
+.gate li.no{border-color:var(--danger);background:var(--danger-bg)}
+.gate li.no .ic{background:var(--danger);color:#fff}
+.gate li .tx b{display:block;font-weight:800;margin-bottom:1px}
+.gate li .tx span{color:var(--ink-2);font-size:12.5px;line-height:1.5}
+.gate li .go{margin-left:auto;flex-shrink:0;font-size:12px;font-weight:800;color:var(--brand);text-decoration:underline;white-space:nowrap;align-self:center}
+
+/* upload da imagem do prêmio — R1: valida conteúdo, não extensão */
+.drop{border:2.5px dashed var(--line);border-radius:16px;padding:18px;display:flex;gap:14px;align-items:center;background:#fdfcfa}
+.drop .thumb{width:88px;height:66px;border-radius:10px;border:2px solid var(--borda-dura);flex-shrink:0;
+  background:linear-gradient(135deg,#f28c28,#e8590c);display:grid;place-items:center;font-size:26px}
+.drop .tx{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.drop .tx b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:2px}
+.drop .tx .mono{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* progresso da geração de estoque — R1: 1M em < 60s, assíncrono */
+.gen{display:flex;flex-direction:column;gap:9px}
+.gen .bar{height:22px;border:2.5px solid var(--borda-dura);border-radius:99px;background:#f6ece0;overflow:hidden}
+.gen .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--card-laranja),var(--card-laranja-2))}
+.gen .lb{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.gen .lb .n{font-variant-numeric:tabular-nums}
+
+.pkg{width:100%;border-collapse:collapse;font-size:13px}
+.pkg th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:0 9px 9px;font-weight:800;border-bottom:2px solid var(--line)}
+.pkg td{padding:9px;border-bottom:1px solid #f4e9dc}
+.pkg tr:last-child td{border-bottom:0}
+.pkg td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.pkg .del{background:none;border:0;color:var(--danger);font-weight:800;cursor:pointer;font-size:12px;font-family:inherit;text-decoration:underline}
+.pkg .tagbest{font-size:10px;font-weight:900;background:var(--gold-bg);color:var(--gold);border:1.5px solid var(--gold);border-radius:99px;padding:2px 7px;margin-left:6px}
+
+.audit{font-size:11.5px;color:var(--muted);margin-top:14px;padding-top:13px;border-top:2px dashed var(--line);line-height:1.6}
+.state-nav{text-align:center;font-size:12px;color:#c3d5f0;margin-top:6px;line-height:1.9}
+.state-nav a{color:var(--amarelo);font-weight:700}
+.state-nav b{color:#fff;display:block;margin-bottom:2px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a class="nav" href="06-painel-operador.html">📊 Painel</a>
+    <a class="nav on" href="01a-campanha-admin.html">🎯 Campanhas</a>
+    <a class="nav" href="08-pedidos-admin.html">🧾 Pedidos</a>
+    <a class="nav" href="07-apuracoes-admin.html">🔐 Apurações</a>
+    <a class="nav" href="09-relatorios.html">📄 Relatórios</a>
+    <a class="nav" href="10-conta-recebimento.html">🏦 Recebimento</a>
+    <div class="sp"></div>
+    <div class="me">
+      <span class="av" aria-hidden="true">SV</span>
+      <span>Serra Verde<span class="sub">operador &middot; 2FA ativo</span></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <p class="crumb"><a href="06-painel-operador.html">Painel</a> › <a href="#">Campanhas</a> › Nova campanha</p>
+    <div class="head">
+      <div>
+        <h1>Moto 0km — Sorteio Serra Verde</h1>
+        <p>Rascunho salvo automaticamente às 18h37</p>
+      </div>
+      <div class="acts">
+        <span class="status rascunho" id="badge">● Rascunho</span>
+        <a class="btn ghost" href="01-campanha.html" target="_blank">Pré-visualizar</a>
+        <a class="btn" href="#" aria-disabled="true" id="btn-pub">🚀 Publicar campanha</a>
+      </div>
+    </div>
+
+    <p class="state-nav" style="text-align:left;margin-bottom:16px">
+      <b>Estados desta tela no protótipo</b>
+      <a href="#" onclick="est(1);return false">1 · rascunho, publicação bloqueada</a> ·
+      <a href="#" onclick="est(2);return false">2 · gerando estoque</a> ·
+      <a href="#" onclick="est(3);return false">3 · publicada (campos travados)</a>
+    </p>
+
+    <!-- ============ R1: por que a publicação está bloqueada ============ -->
+    <div class="banner stop" id="bn-stop">
+      <span aria-hidden="true">🚫</span>
+      <span><b>Publicação bloqueada — 2 pendências.</b>
+        A autorização regulatória venceu e não há conta de recebimento verificada.
+        O Rifiiis não publica campanha que arrecade sem lastro documental
+        nem sem destino de dinheiro definido.</span>
+    </div>
+
+    <div class="banner ok" id="bn-ok" hidden>
+      <span aria-hidden="true">✅</span>
+      <span><b>Campanha publicada e vendendo.</b>
+        Estoque de 1.000.000 números gerado em 41s. A página pública está no ar.</span>
+    </div>
+
+    <!-- ============ portão de publicação (R1 + R8 + R10) ============ -->
+    <section class="card" id="c-gate">
+      <h2>Portão de publicação <span class="r">R1 · R8 · R10</span></h2>
+      <p class="sub">Todos os itens precisam estar verdes. Nenhum deles é dispensável
+        por decisão do operador — são condições de lei ou de dinheiro.</p>
+
+      <ul class="gate">
+        <li class="ok">
+          <span class="ic" aria-hidden="true">✓</span>
+          <span class="tx"><b>Dados da campanha completos</b>
+            <span>Título, prêmio, preço, total de números e data da extração.</span></span>
+        </li>
+        <li class="ok">
+          <span class="ic" aria-hidden="true">✓</span>
+          <span class="tx"><b>Regulamento anexado</b>
+            <span>Versão 1 · publicada com a campanha e congelada no aceite do comprador.</span></span>
+        </li>
+        <li class="no">
+          <span class="ic" aria-hidden="true">✕</span>
+          <span class="tx"><b>Autorização regulatória vencida</b>
+            <span>SPA/MF nº 03412/2026 venceu em 31/08/2026. Anexe a renovação
+              com a nova validade — sem isso a campanha não vai ao ar.</span></span>
+          <a class="go" href="#">Atualizar</a>
+        </li>
+        <li class="no">
+          <span class="ic" aria-hidden="true">✕</span>
+          <span class="tx"><b>Conta de recebimento não verificada</b>
+            <span>O Pix precisa cair na conta do organizador. A titularidade ainda
+              não foi conferida contra o CNPJ 41.882.507/0001-64.</span></span>
+          <a class="go" href="10-conta-recebimento.html">Resolver</a>
+        </li>
+      </ul>
+
+      <p class="audit">
+        🔒 Publicar é ação irreversível em dois campos: <b>preço do bilhete</b> e
+        <b>total de números</b> não mudam depois. Tudo o mais permanece editável,
+        e cada alteração entra na trilha de auditoria com ator e horário.
+      </p>
+    </section>
+
+    <!-- ============ geração assíncrona do estoque (R1: 1M < 60s) ============ -->
+    <section class="card" id="c-gen" hidden>
+      <h2>Gerando o estoque de números <span class="r">R1 · assíncrono</span></h2>
+      <p class="sub">A campanha já está publicada. A geração roda em segundo plano —
+        você pode fechar esta tela.</p>
+      <div class="gen">
+        <div class="bar"><span style="width:68%"></span></div>
+        <div class="lb">
+          <span>Alocando e embaralhando a tabela pré-sorteada</span>
+          <span class="n">680.000 / 1.000.000</span>
+        </div>
+        <p class="sub" style="margin:0" aria-live="polite">
+          Decorrido: 28s · estimativa de conclusão em 13s.
+          A venda abre automaticamente quando terminar.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ identificação ============ -->
+    <section class="card">
+      <h2>A campanha <span class="r">R1</span></h2>
+      <p class="sub">É o que o comprador vê na página pública.</p>
+      <div class="grid">
+        <div class="f full">
+          <label for="tit">Título <span class="req" aria-hidden="true">*</span></label>
+          <input id="tit" type="text" value="Moto 0km — Sorteio Serra Verde" maxlength="80">
+          <p class="hint">Aparece no link compartilhado no WhatsApp e no Instagram.</p>
+        </div>
+        <div class="f full">
+          <label for="desc">Descrição <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="desc">Concorra a uma Honda CG 160 Start 0km, emplacada e com documentação em dia. Apuração pela Loteria Federal, com prova criptográfica publicada antes da extração.</textarea>
+        </div>
+        <div class="f full">
+          <label for="premio">Prêmio principal <span class="req" aria-hidden="true">*</span></label>
+          <input id="premio" type="text" value="Honda CG 160 Start 0km, emplacada">
+        </div>
+        <div class="f full">
+          <label>Imagem do prêmio <span class="req" aria-hidden="true">*</span></label>
+          <div class="drop">
+            <span class="thumb" aria-hidden="true">🏍️</span>
+            <span class="tx">
+              <b>moto-cg160.jpg — 842 KB</b>
+              Substituir arrastando outro arquivo aqui.
+              <span class="mono">tipo real conferido: image/jpeg ✓ · máx. 5 MB</span>
+            </span>
+          </div>
+          <p class="hint">O tipo é validado pelo conteúdo do arquivo, não pela extensão —
+            renomear um <code>.exe</code> para <code>.jpg</code> não passa.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ números e preço: imutáveis após publicar (R1) ============ -->
+    <section class="card">
+      <h2>Números e preço
+        <span class="lockbadge" id="lk1" hidden aria-hidden="true">🔒 imutável após publicar</span>
+        <span class="r">R1 · R2</span></h2>
+      <p class="sub">Preço e total de números <b>não podem mudar depois da publicação</b>:
+        mudar o preço com bilhete vendido reescreveria o que o comprador aceitou.</p>
+      <div class="grid g3">
+        <div class="f" id="f-preco">
+          <label for="preco">Preço do bilhete <span class="req" aria-hidden="true">*</span></label>
+          <input id="preco" type="text" class="mono" value="R$ 2,50">
+        </div>
+        <div class="f" id="f-total">
+          <label for="total">Total de números <span class="req" aria-hidden="true">*</span></label>
+          <input id="total" type="text" class="mono" value="1.000.000">
+          <p class="hint">Máximo 1.000.000 nesta versão.</p>
+        </div>
+        <div class="f" id="f-porb">
+          <label for="porb">Números por bilhete <span class="req" aria-hidden="true">*</span></label>
+          <input id="porb" type="text" class="mono" value="1">
+        </div>
+      </div>
+      <p class="audit">
+        Arrecadação máxima desta configuração: <b>R$ 2.500.000,00</b>.
+        O limite por CPF é exibido ao comprador antes da compra (R8).
+      </p>
+    </section>
+
+    <!-- ============ pacotes de venda ============ -->
+    <section class="card">
+      <h2>Pacotes de venda <span class="r">R1</span></h2>
+      <p class="sub">Atalhos de quantidade na página pública. O comprador também
+        pode escolher a quantidade livremente.</p>
+      <table class="pkg">
+        <thead>
+          <tr><th scope="col">Quantidade</th><th scope="col">Preço</th>
+              <th scope="col" class="num">Desconto</th><th scope="col"></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>5 números</td><td class="mono">R$ 12,50</td><td class="num">—</td>
+              <td><button class="del" type="button">remover</button></td></tr>
+          <tr><td>20 números</td><td class="mono">R$ 45,00</td><td class="num">10%</td>
+              <td><button class="del" type="button">remover</button></td></tr>
+          <tr><td>50 números <span class="tagbest">mais vendido</span></td>
+              <td class="mono">R$ 100,00</td><td class="num">20%</td>
+              <td><button class="del" type="button">remover</button></td></tr>
+        </tbody>
+      </table>
+      <p class="audit">
+        <a href="#" style="color:var(--brand);font-weight:800">+ Adicionar pacote</a>
+      </p>
+    </section>
+
+    <!-- ============ extração e lastro documental (R8) ============ -->
+    <section class="card">
+      <h2>Extração e autorização <span class="r">R1 · R8</span></h2>
+      <p class="sub">A apuração usa a Loteria Federal como fonte de aleatoriedade.
+        O Rifiiis nunca produz resultado próprio.</p>
+      <div class="grid">
+        <div class="f">
+          <label for="ext">Data da extração da Federal <span class="req" aria-hidden="true">*</span></label>
+          <input id="ext" type="date" value="2026-10-25">
+          <p class="hint">Sábado. O congelamento ocorre automaticamente na véspera.</p>
+        </div>
+        <div class="f">
+          <label for="regra">Regra de formação do número apurado <span class="req" aria-hidden="true">*</span></label>
+          <select id="regra">
+            <option selected>Últimos 6 dígitos do 1º prêmio</option>
+            <option>Milhar do 1º ao 5º prêmio, concatenada</option>
+          </select>
+        </div>
+        <div class="f bad full" id="f-aut">
+          <label for="aut">Autorização — número, órgão e validade <span class="req" aria-hidden="true">*</span></label>
+          <input id="aut" type="text" class="mono" value="SPA/MF 03412/2026 · venc. 31/08/2026"
+                 aria-invalid="true" aria-describedby="aut-err">
+          <p class="bad-msg" id="aut-err" role="alert">
+            <span aria-hidden="true">⚠️</span>
+            <span>Autorização vencida há 8 dias. Anexe a renovação para liberar a publicação.</span>
+          </p>
+        </div>
+        <div class="f full">
+          <label for="reg">Regulamento <span class="req" aria-hidden="true">*</span></label>
+          <div class="drop">
+            <span class="thumb" style="background:#e9eef5;font-size:24px" aria-hidden="true">📄</span>
+            <span class="tx">
+              <b>regulamento-serraverde-v1.pdf — 96 KB</b>
+              Versão 1 · o comprador aceita a versão vigente na data da compra.
+              <span class="mono">sha256 4f1c…a2e9</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="state-nav">
+      Rifiiis · protótipo hi-fi &middot; <a href="index.html">voltar ao índice</a>
+    </p>
+  </main>
+</div>
+
+<script>
+/* Alternador de estados do protótipo — não é comportamento de produto. */
+function est(n){
+  var pub = n === 3, gen = n === 2;
+  document.getElementById('bn-stop').hidden = n !== 1;
+  document.getElementById('bn-ok').hidden   = !pub;
+  document.getElementById('c-gate').hidden  = n !== 1;
+  document.getElementById('c-gen').hidden   = !gen;
+  document.getElementById('lk1').hidden     = n === 1;
+
+  var badge = document.getElementById('badge');
+  badge.className = 'status ' + (n === 1 ? 'rascunho' : 'publicada');
+  badge.textContent = n === 1 ? '● Rascunho' : (gen ? '● Publicada · gerando' : '● Publicada');
+
+  var btn = document.getElementById('btn-pub');
+  if (n === 1) { btn.setAttribute('aria-disabled','true'); btn.textContent = '🚀 Publicar campanha'; }
+  else { btn.removeAttribute('aria-disabled'); btn.textContent = '⏸️ Suspender venda'; }
+
+  /* R1: preço e total travam depois de publicar */
+  ['f-preco','f-total','f-porb'].forEach(function(id){
+    var f = document.getElementById(id);
+    f.classList.toggle('locked', n !== 1);
+    var i = f.querySelector('input');
+    if (n === 1) { i.removeAttribute('readonly'); } else { i.setAttribute('readonly',''); }
+  });
+  window.scrollTo(0,0);
+}
+</script>
+
+</body>
+</html>

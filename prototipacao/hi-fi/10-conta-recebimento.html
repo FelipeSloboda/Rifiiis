@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifiiis — Conta de recebimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14243a;--ink-2:#31465f;--paper:#fdf6ee;--card:#fff;--line:#ecdfd0;--muted:#5e6b7c;
+  --brand:#123a6b;--brand-2:#1b5aa8;--acao:#c94508;--acao-viva:#e8590c;--acao-hover:#a83700;
+  --app-bg:#1c4fa1;--app-bg-dark:#0f2f63;--card-laranja:#f28c28;--card-laranja-2:#e8781a;
+  --amarelo:#ffd23f;--borda-dura:#0f2f63;--texto-card:#0d3324;
+  --verify:#0f6b46;--verify-bg:#e6f4ec;
+  --warn:#8a5f00;--warn-bg:#fdf3dc;--danger:#a3232b;--danger-bg:#fbeaea;
+  --gold:#8a6a1f;--gold-bg:#fdf6e3;--pix:#0f7c86;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--app-bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+[hidden]{display:none!important} /* vence display:flex dos banners/cards */
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+@media(max-width:860px){.app{grid-template-columns:1fr}.side{display:none}}
+.side{background:var(--app-bg-dark);color:#cddaea;padding:20px 14px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh}
+.side .brand{display:flex;align-items:center;margin-bottom:22px;padding:0 5px}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;font-size:13.5px;color:#a9c0e2;text-decoration:none;transition:.15s}
+.nav:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav.on{background:rgba(232,89,12,.3);color:#fff;font-weight:800}
+.side .sp{flex:1}
+.side .me{border-top:2px solid rgba(255,255,255,.12);padding-top:14px;margin-top:8px;font-size:12.5px;display:flex;align-items:center;gap:9px}
+.side .me .av{width:31px;height:31px;border-radius:50%;background:var(--brand-2);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.side .me .sub{color:#93a6c2;font-size:11px;display:block;margin-top:1px}
+
+.main{padding:26px 30px 60px;overflow:auto}
+@media(max-width:860px){.main{padding:20px}}
+.crumb{font-size:12px;color:#d3e0f2;font-weight:600;margin-bottom:8px}
+.crumb a{color:var(--amarelo);text-decoration:none;font-weight:700}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:24px;font-weight:900;letter-spacing:-.5px;color:#fff}
+.head p{color:var(--amarelo);font-size:13.5px;font-weight:700;margin-top:3px}
+.head .acts{display:flex;gap:9px;flex-wrap:wrap}
+
+.btn{background:var(--acao);color:#fff;border:2.5px solid var(--borda-dura);border-radius:99px;padding:11px 20px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 0 var(--borda-dura)}
+.btn:hover{background:var(--acao-hover)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--borda-dura)}
+.btn.ghost{background:#fff;color:var(--brand)}
+.btn.ghost:hover{background:var(--paper)}
+.btn[aria-disabled=true]{background:#c9b8aa;color:#6b6259;border-color:#8d8378;box-shadow:0 4px 0 #8d8378;pointer-events:none}
+
+.status{font-size:11.5px;font-weight:900;padding:5px 13px;border-radius:99px;border:2.5px solid var(--borda-dura);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 0 var(--borda-dura)}
+.status.rascunho{background:#efe4d6;color:#5c4a36}
+.status.publicada{background:var(--verify-bg);color:var(--verify)}
+
+.card{background:var(--card);border:3px solid var(--borda-dura);border-radius:20px;padding:20px;margin-bottom:18px;box-shadow:0 5px 0 var(--borda-dura),0 14px 30px -14px rgba(0,0,0,.4)}
+.card h2{font-size:15.5px;font-weight:900;letter-spacing:-.3px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.card h2 .r{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.card .sub{font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.55}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:720px){.grid.g3{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column}
+.f.full{grid-column:1/-1}
+.f label{font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:5px}
+.f label .req{color:var(--danger)}
+.f input,.f select,.f textarea{border:2px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);width:100%}
+.f textarea{min-height:78px;resize:vertical;line-height:1.5}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--brand-2)}
+.f .hint{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.f.bad input,.f.bad select{border-color:var(--danger);background:#fffbfb}
+.f .bad-msg{font-size:12px;color:var(--danger);font-weight:700;margin-top:6px;display:flex;gap:5px;align-items:flex-start}
+.f input.mono{font-family:var(--mono)}
+
+/* R1: preço e total viram imutáveis depois de publicar */
+.f.locked input,.f.locked select{background:#f3f5f8;color:var(--ink-2);cursor:not-allowed;border-style:dashed}
+.lockbadge{font-size:10.5px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:inline-flex;gap:4px;align-items:center;margin-left:auto}
+
+.banner{display:flex;gap:12px;border:3px solid var(--borda-dura);border-radius:16px;padding:14px 16px;margin-bottom:18px;font-size:13.5px;align-items:flex-start;box-shadow:0 4px 0 var(--borda-dura)}
+.banner b:first-child{display:block} /* só o título; <b> no meio da frase segue inline */
+.banner.stop{background:var(--danger-bg);color:#7d1a21}
+.banner.warn{background:var(--warn-bg);color:#6d4d08}
+.banner.ok{background:var(--verify-bg);color:#1c5540}
+.banner .act{margin-left:auto;flex-shrink:0}
+
+/* checklist de publicação — R1 + R10 + R8 */
+.gate{list-style:none;display:flex;flex-direction:column;gap:9px}
+.gate li{display:flex;gap:11px;align-items:flex-start;font-size:13px;padding:11px 13px;border:2px solid var(--line);border-radius:14px;background:#fdfcfa}
+.gate li .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0;border:2px solid var(--borda-dura);margin-top:1px}
+.gate li.ok{border-color:#bce0cd;background:var(--verify-bg)}
+.gate li.ok .ic{background:var(--verify);color:#fff}
+.gate li.no{border-color:var(--danger);background:var(--danger-bg)}
+.gate li.no .ic{background:var(--danger);color:#fff}
+.gate li .tx b{display:block;font-weight:800;margin-bottom:1px}
+.gate li .tx span{color:var(--ink-2);font-size:12.5px;line-height:1.5}
+.gate li .go{margin-left:auto;flex-shrink:0;font-size:12px;font-weight:800;color:var(--brand);text-decoration:underline;white-space:nowrap;align-self:center}
+
+/* upload da imagem do prêmio — R1: valida conteúdo, não extensão */
+.drop{border:2.5px dashed var(--line);border-radius:16px;padding:18px;display:flex;gap:14px;align-items:center;background:#fdfcfa}
+.drop .thumb{width:88px;height:66px;border-radius:10px;border:2px solid var(--borda-dura);flex-shrink:0;
+  background:linear-gradient(135deg,#f28c28,#e8590c);display:grid;place-items:center;font-size:26px}
+.drop .tx{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.drop .tx b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:2px}
+.drop .tx .mono{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* progresso da geração de estoque — R1: 1M em < 60s, assíncrono */
+.gen{display:flex;flex-direction:column;gap:9px}
+.gen .bar{height:22px;border:2.5px solid var(--borda-dura);border-radius:99px;background:#f6ece0;overflow:hidden}
+.gen .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--card-laranja),var(--card-laranja-2))}
+.gen .lb{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.gen .lb .n{font-variant-numeric:tabular-nums}
+
+.pkg{width:100%;border-collapse:collapse;font-size:13px}
+.pkg th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:0 9px 9px;font-weight:800;border-bottom:2px solid var(--line)}
+.pkg td{padding:9px;border-bottom:1px solid #f4e9dc}
+.pkg tr:last-child td{border-bottom:0}
+.pkg td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.pkg .del{background:none;border:0;color:var(--danger);font-weight:800;cursor:pointer;font-size:12px;font-family:inherit;text-decoration:underline}
+.pkg .tagbest{font-size:10px;font-weight:900;background:var(--gold-bg);color:var(--gold);border:1.5px solid var(--gold);border-radius:99px;padding:2px 7px;margin-left:6px}
+
+.audit{font-size:11.5px;color:var(--muted);margin-top:14px;padding-top:13px;border-top:2px dashed var(--line);line-height:1.6}
+.state-nav{text-align:center;font-size:12px;color:#c3d5f0;margin-top:6px;line-height:1.9}
+.state-nav a{color:var(--amarelo);font-weight:700}
+.state-nav b{color:#fff;display:block;margin-bottom:2px}
+</style>
+
+<style>
+/* R10: fluxo do dinheiro — a plataforma nunca aparece como destino */
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fdfcfa;
+  border:2.5px dashed var(--line);border-radius:16px;padding:16px;margin-bottom:4px}
+.flow .no{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:104px;text-align:center}
+.flow .no .ic{width:46px;height:46px;border-radius:13px;border:2.5px solid var(--borda-dura);
+  display:grid;place-items:center;font-size:21px;background:#fff;box-shadow:0 3px 0 var(--borda-dura)}
+.flow .no b{font-size:12.5px;font-weight:800}
+.flow .no span{font-size:11px;color:var(--muted);line-height:1.4}
+.flow .ar{font-size:19px;color:var(--acao);font-weight:900;flex-shrink:0}
+/* nó fora do caminho: sem opacity — ela rebaixaria o contraste abaixo de AA.
+   A exclusão é dita pelo traço, pela borda tracejada e pelo texto, não pelo apagamento. */
+.flow .fora .ic{background:#f3f5f8;border-style:dashed;box-shadow:none;color:#5e6b7c}
+.flow .fora b{text-decoration:line-through;color:var(--muted)}
+.flow .fora span{color:var(--muted)}
+
+.acct{display:flex;gap:14px;align-items:flex-start;border:2.5px solid var(--borda-dura);
+  border-radius:16px;padding:16px;background:#fdfcfa;box-shadow:0 4px 0 var(--borda-dura)}
+.acct .psp{width:52px;height:52px;border-radius:14px;background:var(--pix);color:#fff;
+  display:grid;place-items:center;font-weight:900;font-size:12px;flex-shrink:0;border:2.5px solid var(--borda-dura)}
+.acct dl{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:13px;flex:1;min-width:0}
+.acct dt{color:var(--muted);font-weight:600}
+.acct dd{font-weight:700;text-align:right;word-break:break-all}
+.acct dd.mono{font-family:var(--mono);font-size:12.5px}
+.acct .chk{font-size:11.5px;font-weight:900;padding:4px 11px;border-radius:99px;border:2px solid currentColor;white-space:nowrap}
+.acct .chk.ok{background:var(--verify-bg);color:var(--verify)}
+.acct .chk.wait{background:var(--warn-bg);color:var(--warn)}
+
+/* estornos pendentes — R10: consequencia assumida da nao-custodia */
+.est{width:100%;border-collapse:collapse;font-size:13px}
+.est th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:0 9px 9px;font-weight:800;border-bottom:2px solid var(--line)}
+.est td{padding:11px 9px;border-bottom:1px solid #f4e9dc}
+.est tr:last-child td{border-bottom:0}
+.est td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.est td.mono{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.est .pill{font-size:10.5px;font-weight:900;padding:4px 9px;border-radius:99px;border:1.5px solid currentColor;white-space:nowrap}
+.est .pill.pend{background:var(--warn-bg);color:var(--warn)}
+.est .pill.crit{background:var(--danger-bg);color:var(--danger)}
+.est tr.crit td{background:#fdf4f4}
+.total{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:13px;
+  border-top:2.5px solid var(--borda-dura);font-size:14px;font-weight:900}
+.total .v{font-family:var(--mono);font-size:17px;color:var(--danger)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><svg height="34" viewBox="0 0 520 235" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rifiiis" style="display:block"><defs><linearGradient id="lgor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5a623"/><stop offset="1" stop-color="#e8590c"/></linearGradient><linearGradient id="lgph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset="1" stop-color="#c9d8ec"/></linearGradient><linearGradient id="lgcl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc93e"/><stop offset="1" stop-color="#379d26"/></linearGradient><g id="trv"><path d="M0 16 q5 15 -3 28" fill="none" stroke="#14243a" stroke-width="9" stroke-linecap="round"/><path d="M0 16 q5 15 -3 28" fill="none" stroke="url(#lgcl)" stroke-width="4" stroke-linecap="round"/><circle cx="-15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="15" cy="2" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="0" cy="-16" r="15" fill="url(#lgcl)" stroke="#14243a" stroke-width="7"/><circle cx="-15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="15" cy="2" r="12.5" fill="url(#lgcl)"/><circle cx="0" cy="-16" r="12.5" fill="url(#lgcl)"/></g></defs><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="none" stroke="#fff" stroke-width="24"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round">IIIS</text><g transform="translate(414,40) rotate(7)"><rect width="94" height="176" rx="20" fill="url(#lgph)" stroke="#14243a" stroke-width="9"/><rect x="23" y="9" width="48" height="10" rx="5" fill="#14243a" opacity=".85"/></g><text x="12" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-6" fill="#fff" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">RIF</text><text x="246" y="180" font-family="Nunito,sans-serif" font-weight="900" font-size="150" letter-spacing="-4" fill="url(#lgor)" stroke="#14243a" stroke-width="13" paint-order="stroke" stroke-linejoin="round">IIIS</text><use href="#trv" transform="translate(163,42) scale(.95)"/><use href="#trv" transform="translate(305,30) scale(1.12)"/></svg></div>
+    <a class="nav" href="06-painel-operador.html">📊 Painel</a>
+    <a class="nav" href="01a-campanha-admin.html">🎯 Campanhas</a>
+    <a class="nav" href="08-pedidos-admin.html">🧾 Pedidos</a>
+    <a class="nav" href="07-apuracoes-admin.html">🔐 Apurações</a>
+    <a class="nav" href="09-relatorios.html">📄 Relatórios</a>
+    <a class="nav on" href="10-conta-recebimento.html">🏦 Recebimento</a>
+    <div class="sp"></div>
+    <div class="me">
+      <span class="av" aria-hidden="true">SV</span>
+      <span>Serra Verde<span class="sub">operador &middot; 2FA ativo</span></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <p class="crumb"><a href="06-painel-operador.html">Painel</a> › Conta de recebimento</p>
+
+    <div class="head">
+      <div>
+        <h1>Conta de recebimento</h1>
+        <p>Para onde o dinheiro dos compradores vai</p>
+      </div>
+      <div class="acts">
+        <a class="btn ghost" href="#">Trocar conta</a>
+      </div>
+    </div>
+
+    <p class="state-nav" style="text-align:left;margin-bottom:16px">
+      <b>Estados desta tela no protótipo</b>
+      <a href="#" onclick="est(1);return false">1 · verificada</a> ·
+      <a href="#" onclick="est(2);return false">2 · aguardando verificação</a> ·
+      <a href="#" onclick="est(3);return false">3 · titularidade recusada</a>
+    </p>
+
+    <!-- ============ R10: a plataforma não custodia dinheiro de terceiros ============ -->
+    <section class="card">
+      <h2>Como o dinheiro caminha <span class="r">R10 · ADR-17</span></h2>
+      <p class="sub">O Pix do comprador cai <b>direto na sua conta</b> no PicPay.
+        O Rifiiis cria a cobrança, acompanha o pagamento e entrega os números —
+        mas nunca detém o dinheiro.</p>
+
+      <div class="flow">
+        <span class="no">
+          <span class="ic" aria-hidden="true">👤</span>
+          <b>Comprador</b><span>paga o Pix</span>
+        </span>
+        <span class="ar" aria-hidden="true">→</span>
+        <span class="no">
+          <span class="ic" aria-hidden="true">🏦</span>
+          <b>Sua conta</b><span>PicPay · Serra Verde</span>
+        </span>
+        <span class="ar" aria-hidden="true">✕</span>
+        <span class="no fora">
+          <span class="ic" aria-hidden="true">🏢</span>
+          <b>bit4devs</b><span>nunca no caminho</span>
+        </span>
+      </div>
+      <p class="audit">
+        🔒 Nenhuma tela, relatório ou API do Rifiiis mostra saldo seu — porque
+        não existe saldo seu aqui. Custodiar dinheiro de terceiro em operação de
+        sorteio exigiria licença própria e aproximaria a bit4devs do seu risco
+        regulatório.
+      </p>
+    </section>
+
+    <!-- ============ a conta cadastrada ============ -->
+    <section class="card">
+      <h2>Conta cadastrada <span class="r">R10</span></h2>
+      <p class="sub" id="acct-sub">Esta é a conta que recebe. Confira antes de publicar qualquer campanha.</p>
+
+      <div class="acct">
+        <span class="psp" aria-hidden="true">PicPay</span>
+        <dl>
+          <dt>Titular</dt><dd>Serra Verde Promoções ME</dd>
+          <dt>CNPJ do titular</dt><dd class="mono">41.882.507/0001-64</dd>
+          <dt>Chave Pix</dt><dd class="mono">41882507000164</dd>
+          <dt>Tipo</dt><dd>CNPJ · conta de pagamento</dd>
+        </dl>
+        <span class="chk ok" id="chk">✓ Verificada</span>
+      </div>
+
+      <div class="banner ok" id="bn-ok" style="margin:16px 0 0">
+        <span aria-hidden="true">✅</span>
+        <span><b>Titularidade confere com o CNPJ do organizador.</b>
+          Conferido em 02/09/2026 contra o cadastro do provisionamento.</span>
+      </div>
+
+      <div class="banner warn" id="bn-wait" hidden style="margin:16px 0 0">
+        <span aria-hidden="true">⏳</span>
+        <span><b>Aguardando verificação do PicPay.</b>
+          Leva até 1 dia útil. Enquanto isso a publicação de campanha
+          fica bloqueada — não é possível vender sem destino confirmado.</span>
+      </div>
+
+      <div class="banner stop" id="bn-bad" hidden style="margin:16px 0 0">
+        <span aria-hidden="true">🚫</span>
+        <span><b>Conta recusada: titular é terceiro.</b>
+          A conta informada pertence a <b>João P. de Almeida (CPF ***.221.44-**)</b>,
+          e não ao CNPJ 41.882.507/0001-64 do organizador. Conta de terceiro
+          é recusada — o dinheiro do comprador precisa cair em nome de quem
+          assinou a autorização da campanha.</span>
+      </div>
+
+      <p class="audit">
+        🔒 Trocar a conta de recebimento exige <b>reautenticação com segundo fator</b>
+        e entra na trilha de auditoria com ator, horário e a conta anterior.
+      </p>
+    </section>
+
+    <!-- ============ R10: estorno depende de saldo do operador ============ -->
+    <section class="card">
+      <h2>Estornos pendentes <span class="r">R10 · consequência assumida</span></h2>
+      <p class="sub">Sem custódia, o Rifiiis não estorna com dinheiro próprio: o pedido
+        vai ao PicPay <b>na sua conta</b>. Se faltar saldo, o pedido fica
+        <b>ESTORNO_PENDENTE</b> — nunca é marcado como estornado.</p>
+
+      <div class="table-wrap" style="overflow-x:auto" tabindex="0" role="region" aria-label="Estornos pendentes">
+      <table class="est">
+        <caption class="sr-only">Estornos pendentes por falta de saldo</caption>
+        <thead>
+          <tr><th scope="col">Pedido</th><th scope="col">Comprador</th>
+              <th scope="col">Motivo</th><th scope="col">Aberto há</th>
+              <th scope="col" class="num">Valor</th><th scope="col">Estado</th></tr>
+        </thead>
+        <tbody>
+          <tr class="crit">
+            <td class="mono">#8841</td><td>M. A. Ferreira</td>
+            <td>Pix após expiração, sem estoque</td><td>9 dias</td>
+            <td class="num">R$ 100,00</td>
+            <td><span class="pill crit">crítico</span></td>
+          </tr>
+          <tr>
+            <td class="mono">#9012</td><td>R. S. Nunes</td>
+            <td>Pix após expiração, sem estoque</td><td>2 dias</td>
+            <td class="num">R$ 45,00</td>
+            <td><span class="pill pend">pendente</span></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="total">
+        <span>Total devido aos compradores</span>
+        <span class="v">R$ 145,00</span>
+      </div>
+
+      <div class="banner stop" style="margin:16px 0 0">
+        <span aria-hidden="true">⏱️</span>
+        <span><b>O pedido #8841 passou de 7 dias e escalou para crítico.</b>
+          Regularize o saldo da conta de recebimento. O comprador já foi
+          informado de que o estorno está em andamento — mas ele está
+          esperando há 9 dias.</span>
+      </div>
+
+      <p class="audit">
+        🔒 O comprador nunca fica sem resposta: o painel dele mostra
+        “estorno em andamento” com previsão, não silêncio. Dinheiro recebido
+        com número não entregue e estorno falhando calado é o pior incidente
+        que esta plataforma pode ter.
+      </p>
+    </section>
+
+    <p class="state-nav">
+      Rifiiis · protótipo hi-fi &middot; <a href="index.html">voltar ao índice</a>
+    </p>
+  </main>
+</div>
+
+<script>
+/* Alternador de estados do protótipo — não é comportamento de produto. */
+function est(n){
+  document.getElementById('bn-ok').hidden   = n !== 1;
+  document.getElementById('bn-wait').hidden = n !== 2;
+  document.getElementById('bn-bad').hidden  = n !== 3;
+  var c = document.getElementById('chk');
+  c.className = 'chk ' + (n === 1 ? 'ok' : 'wait');
+  c.textContent = n === 1 ? '✓ Verificada' : (n === 2 ? '⏳ Em verificação' : '✕ Recusada');
+  window.scrollTo(0,0);
+}
+</script>
+
+</body>
+</html>
